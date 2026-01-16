@@ -1,30 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { User, Save, Pencil, X, Loader, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { Search, MessageSquare, Video, ArrowRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 
 // --- Mock Data simulating a Google Sheet ---
 const allClientsData = [
@@ -370,223 +362,195 @@ const allClientsData = [
 
 type Client = (typeof allClientsData)[0];
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
+const toTitleCase = (str: string) => {
+  const result = str.replace(/([A-Z])/g, ' $1');
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
 
-const upcomingClientsData = allClientsData
-  .filter((c) => {
-    if (!c.nextMeeting) return false;
-    const meetingDate = new Date(c.nextMeeting);
-    return meetingDate >= today && meetingDate < tomorrow;
-  })
-  .map((c) => ({
-    ...c,
-    time: new Date(c.nextMeeting!).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
-  }));
+const initialFieldConfig = Object.keys(allClientsData[0]).map((key) => ({
+  key: key as keyof Client,
+  label: toTitleCase(key),
+  visible: ![
+    'id',
+    'avatarId',
+    'lastContact',
+    'nextMeeting',
+    'column1',
+    'clientId',
+    'province',
+    'postal',
+  ].includes(key),
+}));
 
-export default function ClientsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Client[]>([]);
+type FieldConfig = typeof initialFieldConfig;
+
+export default function ClientDetailPage({
+  params,
+}: {
+  params: { clientId: string };
+}) {
+  const { clientId } = params;
+
+  const client = useMemo(() => {
+    return allClientsData.find((c) => c.clientId === clientId);
+  }, [clientId]);
+
+  const [editedClient, setEditedClient] = useState<Client | null>(
+    client ? { ...client } : null
+  );
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fieldConfig, setFieldConfig] =
+    useState<FieldConfig>(initialFieldConfig);
+  const [showFieldSettings, setShowFieldSettings] = useState(false);
   const { toast } = useToast();
 
-  const handleSearch = () => {
-    if (!searchQuery) {
-      setSearchResults([]);
-      return;
+  const handleFieldChange = (key: keyof Client, value: string) => {
+    if (editedClient) {
+      setEditedClient({ ...editedClient, [key]: value });
     }
-    const lowercasedQuery = searchQuery.toLowerCase();
-    const results = allClientsData.filter((client) =>
-      Object.values(client).some((value) =>
-        String(value).toLowerCase().includes(lowercasedQuery)
+  };
+
+  const handleSave = () => {
+    setIsSaving(true);
+    // Simulate API call to update the data source
+    setTimeout(() => {
+      // In a real app, you would find and update the original `allClientsData`
+      // For now, we'll just show a toast. The change won't persist on refresh.
+      setIsEditing(false);
+      setIsSaving(false);
+      toast({
+        title: 'Client Updated',
+        description: `${editedClient?.name}'s information has been saved.`,
+      });
+    }, 1000);
+  };
+
+  const toggleFieldVisibility = (key: keyof Client) => {
+    setFieldConfig((prevConfig) =>
+      prevConfig.map((field) =>
+        field.key === key ? { ...field, visible: !field.visible } : field
       )
     );
-    setSearchResults(results);
-    if (results.length === 0) {
-      toast({
-        title: 'No results found',
-        description: `Your search for "${searchQuery}" did not return any clients.`,
-      });
-    }
   };
 
-  const handleTextClient = (client: Client) => {
-    toast({
-      title: 'SMS Feature (Quo Integration)',
-      description: `This would open a modal to send an SMS to ${client.name}.`,
-    });
-  };
+  const visibleFields = fieldConfig.filter((f) => f.visible);
 
-  const handleJoinCall = (client: Client) => {
-    toast({
-      title: 'Initiating Meeting',
-      description: `This would open the virtual meeting link for ${client.name}.`,
-    });
-  };
+  if (!client) {
+    return (
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 text-center">
+        <h2 className="text-2xl font-bold">Client not found</h2>
+        <p>The client with ID &quot;{clientId}&quot; could not be found.</p>
+        <Button asChild>
+          <Link href="/clients">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Clients
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Clients</h2>
+        <Button variant="outline" asChild>
+          <Link href="/clients">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to All Clients
+          </Link>
+        </Button>
       </div>
-
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Search All Clients</CardTitle>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3">
+              <User /> Client Profile
+            </CardTitle>
             <CardDescription>
-              Find any client in your records to view their detailed profile.
+              Viewing details for {client.name}.
             </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex w-full max-w-lg items-center space-x-2">
-              <Input
-                type="text"
-                placeholder="Enter client name, email, phone, etc..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button onClick={handleSearch}>
-                <Search className="mr-2 h-4 w-4" />
-                Search
+          </div>
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Profile
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {searchResults.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {searchResults.map((client) => {
-                    const avatar = PlaceHolderImages.find(
-                      (img) => img.id === client.avatarId
-                    );
-                    return (
-                      <TableRow key={client.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={avatar?.imageUrl} />
-                              <AvatarFallback>
-                                {client.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{client.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{client.email}</TableCell>
-                        <TableCell>{client.phone}</TableCell>
-                        <TableCell className="text-right">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/clients/${client.clientId}`}>
-                              View Profile{' '}
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Today&apos;s Clients</CardTitle>
-            <CardDescription>
-              Clients with meetings scheduled for today.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingClientsData.length > 0 ? (
-                  upcomingClientsData.map((client) => {
-                    const avatar = PlaceHolderImages.find(
-                      (img) => img.id === client.avatarId
-                    );
-                    return (
-                      <TableRow key={client.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={avatar?.imageUrl} />
-                              <AvatarFallback>
-                                {client.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{client.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{client.time}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTextClient(client)}
-                          >
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            SMS
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleJoinCall(client)}
-                          >
-                            <Video className="mr-2 h-4 w-4" />
-                            Join Call
-                          </Button>
-                          <Button asChild size="sm">
-                            <Link href={`/clients/${client.clientId}`}>
-                              View Profile
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {visibleFields.map(({ key, label }) => (
+              <div className="space-y-1" key={key}>
+                <Label htmlFor={key}>{label}</Label>
+                {isEditing ? (
+                  <Input
+                    id={key}
+                    value={editedClient?.[key] || ''}
+                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                  />
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center">
-                      No upcoming meetings today.
-                    </TableCell>
-                  </TableRow>
+                  <p className="text-sm text-muted-foreground p-2 min-h-[36px]">
+                    {String(client?.[key] || 'N/A')}
+                  </p>
                 )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter className="flex-col items-start gap-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="field-visibility"
+              checked={showFieldSettings}
+              onCheckedChange={setShowFieldSettings}
+            />
+            <Label htmlFor="field-visibility">
+              Manage Visible Fields (Admin)
+            </Label>
+          </div>
+          {showFieldSettings && (
+            <div className="w-full space-y-2 rounded-md border p-4">
+              <p className="font-medium text-sm">Toggle field visibility</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
+                {initialFieldConfig.map(({ key, label }) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <Label htmlFor={`vis-${key}`} className="font-normal">
+                      {label}
+                    </Label>
+                    <Switch
+                      id={`vis-${key}`}
+                      checked={fieldConfig.find((f) => f.key === key)?.visible}
+                      onCheckedChange={() => toggleFieldVisibility(key)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 }
