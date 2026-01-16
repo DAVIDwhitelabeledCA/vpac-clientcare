@@ -39,37 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
-
-const appointments = [
-  {
-    name: 'Liam Johnson',
-    email: 'liam@example.com',
-    time: '9:00 AM',
-    avatarId: 'avatar2',
-    clientId: 'clientId-678901',
-  },
-  {
-    name: 'Olivia Smith',
-    email: 'olivia@example.com',
-    time: '10:00 AM',
-    avatarId: 'avatar4',
-    clientId: 'clientId-901234',
-  },
-  {
-    name: 'Noah Williams',
-    email: 'noah@example.com',
-    time: '11:00 AM',
-    avatarId: 'avatar3',
-    clientId: 'clientId-983308',
-  },
-  {
-    name: 'Emma Brown',
-    email: 'emma@example.com',
-    time: '12:00 PM',
-    avatarId: 'avatar1',
-    clientId: 'clientId-112345',
-  },
-];
+import { upcomingClientsData } from '@/lib/mock-data';
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -113,7 +83,9 @@ export default function Dashboard() {
               <Video className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">
+                {upcomingClientsData.length}
+              </div>
               <p className="text-xs text-muted-foreground">
                 +2 from yesterday
               </p>
@@ -185,62 +157,70 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {appointments.map((appt) => {
-                    const avatar = PlaceHolderImages.find(
-                      (img) => img.id === appt.avatarId
-                    );
-                    return (
-                      <TableRow key={appt.email}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage
-                                src={avatar?.imageUrl}
-                                alt="Avatar"
-                                data-ai-hint={avatar?.imageHint}
-                              />
-                              <AvatarFallback>
-                                {appt.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="font-medium">{appt.name}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{appt.time}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline">
-                                Join Call
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleJoinCall(appt.name)}
-                              >
-                                <Video className="mr-2 h-4 w-4" />
-                                <span>Join Call</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleTextClient(appt.name)}
-                              >
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                <span>SMS Client</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/clients/${appt.clientId}`}>
-                                  <User className="mr-2 h-4 w-4" />
-                                  <span>View Profile</span>
-                                </Link>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {upcomingClientsData.length > 0 ? (
+                    upcomingClientsData.map((appt) => {
+                      const avatar = PlaceHolderImages.find(
+                        (img) => img.id === appt.avatarId
+                      );
+                      return (
+                        <TableRow key={appt.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage
+                                  src={avatar?.imageUrl}
+                                  alt="Avatar"
+                                  data-ai-hint={avatar?.imageHint}
+                                />
+                                <AvatarFallback>
+                                  {appt.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="font-medium">{appt.name}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{appt.time}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="outline">
+                                  Actions
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleJoinCall(appt.name)}
+                                >
+                                  <Video className="mr-2 h-4 w-4" />
+                                  <span>Join Call</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleTextClient(appt.name)}
+                                >
+                                  <MessageSquare className="mr-2 h-4 w-4" />
+                                  <span>SMS Client</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/clients/${appt.clientId}`}>
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>View Profile</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center">
+                        No upcoming appointments today.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
