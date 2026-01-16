@@ -36,16 +36,22 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
-const upcomingClientsData = [
+// --- Mock Data simulating a Google Sheet ---
+const allClientsData = [
   {
     id: 1,
     name: 'Liam Johnson',
     email: 'liam@example.com',
     phone: '555-123-4567',
     company: 'Innovate Inc.',
+    project: 'Mobile App Redesign',
+    status: 'In Progress',
     lastContact: '2024-07-28',
+    nextMeeting: '2024-08-05T09:00:00',
+    notes: 'Wants to focus on user retention features.',
+    address: '123 Tech Avenue',
+    city: 'Metropolis',
     avatarId: 'avatar2',
-    time: '9:00 AM',
   },
   {
     id: 2,
@@ -53,9 +59,14 @@ const upcomingClientsData = [
     email: 'olivia@example.com',
     phone: '555-987-6543',
     company: 'Solutions Co.',
+    project: 'Data Analytics Dashboard',
+    status: 'Completed',
     lastContact: '2024-07-25',
+    nextMeeting: new Date().toISOString(), // This meeting is today
+    notes: 'Final report delivered. Client is happy.',
+    address: '456 Business Blvd',
+    city: 'Gotham',
     avatarId: 'avatar4',
-    time: '10:00 AM',
   },
   {
     id: 3,
@@ -63,43 +74,90 @@ const upcomingClientsData = [
     email: 'noah@example.com',
     phone: '555-555-5555',
     company: 'Creative LLC',
+    project: 'Brand Identity Overhaul',
+    status: 'On Hold',
     lastContact: '2024-07-22',
+    nextMeeting: new Date().toISOString(), // This meeting is also today
+    notes: 'Waiting for new brand guidelines from their marketing team.',
+    address: '789 Design Drive',
+    city: 'Star City',
     avatarId: 'avatar3',
-    time: '11:00 AM',
   },
-];
-
-const allClientsData = [
-  ...upcomingClientsData,
   {
     id: 4,
     name: 'Emma Brown',
     email: 'emma@example.com',
     phone: '555-111-2222',
     company: 'Tech Forward',
+    project: 'Cloud Migration',
+    status: 'Planning',
     lastContact: '2024-07-20',
+    nextMeeting: null,
+    notes: 'Initial consultation complete. Proposal sent.',
+    address: '101 Data Drive',
+    city: 'Central City',
     avatarId: 'avatar1',
-    time: null,
+  },
+  {
+    id: 5,
+    name: 'James Wilson',
+    email: 'james@example.com',
+    phone: '555-222-3333',
+    company: 'Synergy Corp',
+    project: 'AI Chatbot Integration',
+    status: 'In Progress',
+    lastContact: '2024-07-30',
+    nextMeeting: null,
+    notes: 'Needs weekly progress reports.',
+    address: '212 Innovation Way',
+    city: 'Metropolis',
+    avatarId: 'avatar2',
   },
 ];
 
 type Client = (typeof allClientsData)[0];
 
-const initialFieldConfig = [
-  { key: 'name', label: 'Full Name', visible: true },
-  { key: 'email', label: 'Email Address', visible: true },
-  { key: 'phone', label: 'Phone Number', visible: true },
-  { key: 'company', label: 'Company', visible: true },
-  { key: 'lastContact', label: 'Last Contact', visible: false },
-];
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+
+const upcomingClientsData = allClientsData
+  .filter((c) => {
+    if (!c.nextMeeting) return false;
+    const meetingDate = new Date(c.nextMeeting);
+    return meetingDate >= today && meetingDate < tomorrow;
+  })
+  .map((c) => ({
+    ...c,
+    time: new Date(c.nextMeeting!).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+  }));
+
+const toTitleCase = (str: string) => {
+  const result = str.replace(/([A-Z])/g, ' $1');
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
+const initialFieldConfig = Object.keys(allClientsData[0]).map((key) => ({
+  key: key as keyof Client,
+  label: toTitleCase(key),
+  visible: !['id', 'avatarId', 'notes', 'nextMeeting', 'address', 'city'].includes(key),
+}));
 
 type FieldConfig = typeof initialFieldConfig;
 
 export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Client[]>([]);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [editedClient, setEditedClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(
+    upcomingClientsData.length > 0 ? upcomingClientsData[0] : null
+  );
+  const [editedClient, setEditedClient] = useState<Client | null>(
+     upcomingClientsData.length > 0 ? { ...upcomingClientsData[0] } : null
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [fieldConfig, setFieldConfig] = useState<FieldConfig>(
@@ -113,8 +171,11 @@ export default function ClientsPage() {
       setSearchResults([]);
       return;
     }
+    const lowercasedQuery = searchQuery.toLowerCase();
     const results = allClientsData.filter((client) =>
-      client.name.toLowerCase().includes(searchQuery.toLowerCase())
+      Object.values(client).some((value) =>
+        String(value).toLowerCase().includes(lowercasedQuery)
+      )
     );
     setSearchResults(results);
     if (results.length > 0) {
@@ -138,9 +199,10 @@ export default function ClientsPage() {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Simulate API call
+    // Simulate API call to update the data source
     setTimeout(() => {
       setSelectedClient(editedClient);
+      // Here you would also update the `allClientsData` array or refetch
       setIsEditing(false);
       setIsSaving(false);
       toast({
@@ -150,7 +212,7 @@ export default function ClientsPage() {
     }, 1000);
   };
 
-  const toggleFieldVisibility = (key: string) => {
+  const toggleFieldVisibility = (key: keyof Client) => {
     setFieldConfig((prevConfig) =>
       prevConfig.map((field) =>
         field.key === key ? { ...field, visible: !field.visible } : field
@@ -179,7 +241,7 @@ export default function ClientsPage() {
               <div className="flex w-full max-w-lg items-center space-x-2">
                 <Input
                   type="text"
-                  placeholder="Enter client name..."
+                  placeholder="Enter client name, email, project..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -210,31 +272,39 @@ export default function ClientsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {upcomingClientsData.map((client) => {
-                    const avatar = PlaceHolderImages.find(
-                      (img) => img.id === client.avatarId
-                    );
-                    return (
-                      <TableRow
-                        key={client.id}
-                        onClick={() => handleSelectClient(client)}
-                        className="cursor-pointer"
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={avatar?.imageUrl} />
-                              <AvatarFallback>
-                                {client.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{client.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{client.time}</TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {upcomingClientsData.length > 0 ? (
+                    upcomingClientsData.map((client) => {
+                      const avatar = PlaceHolderImages.find(
+                        (img) => img.id === client.avatarId
+                      );
+                      return (
+                        <TableRow
+                          key={client.id}
+                          onClick={() => handleSelectClient(client)}
+                          className="cursor-pointer"
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={avatar?.imageUrl} />
+                                <AvatarFallback>
+                                  {client.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{client.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{client.time}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center">
+                        No upcoming meetings today.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -293,17 +363,17 @@ export default function ClientsPage() {
                       {isEditing ? (
                         <Input
                           id={key}
-                          value={editedClient?.[key as keyof Client] || ''}
+                          value={editedClient?.[key] || ''}
                           onChange={(e) =>
                             handleFieldChange(
-                              key as keyof Client,
+                              key,
                               e.target.value
                             )
                           }
                         />
                       ) : (
                         <p className="text-sm text-muted-foreground p-2 min-h-[36px]">
-                          {selectedClient?.[key as keyof Client] || 'N/A'}
+                          {selectedClient?.[key] || 'N/A'}
                         </p>
                       )}
                     </div>
@@ -327,7 +397,7 @@ export default function ClientsPage() {
                       Toggle field visibility
                     </p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                      {fieldConfig.map(({ key, label, visible }) => (
+                      {initialFieldConfig.map(({ key, label, visible }) => (
                         <div
                           key={key}
                           className="flex items-center justify-between"
@@ -337,7 +407,7 @@ export default function ClientsPage() {
                           </Label>
                           <Switch
                             id={`vis-${key}`}
-                            checked={visible}
+                            checked={fieldConfig.find(f => f.key === key)?.visible}
                             onCheckedChange={() => toggleFieldVisibility(key)}
                           />
                         </div>
