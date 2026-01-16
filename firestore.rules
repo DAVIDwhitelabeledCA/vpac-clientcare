@@ -1,28 +1,30 @@
 /**
  * Core Philosophy: This ruleset enforces a hybrid security model. It uses strict user-ownership for sensitive,
- * user-specific data (like integrations and availability), and a role-based access control (RBAC) model for
- * shared, collaborative data (appointments). A special 'office_assistant' role is granted broad privileges
- * to manage scheduling across the entire application, reflecting the core business requirement.
+ * user-specific data (like integrations) and a role-based access control (RBAC) model for collaborative and
+ * administrative data (users, appointments, availability).
+ *
+ * A special 'office_assistant' role is granted broad privileges to manage scheduling across the entire
+ * application, reflecting a key business requirement for centralized administration.
  *
  * Data Structure: The data is organized into top-level collections for shared data (`/users`, `/appointments`)
  * and user-specific subcollections for private data (`/users/{userId}/availability_blocks`, `/users/{userId}/integrations`).
  * This structure provides clear ownership boundaries and facilitates secure, performant queries.
  *
  * Key Security Decisions:
- * - A global 'office_assistant' role can manage all appointments and availability blocks.
- * - Regular users (staff, clients) can only view appointments they are part of and cannot modify them.
- * - Users can only manage their own profile, availability, and integration data.
+ * - A global 'office_assistant' role can manage all appointments and availability blocks for any user. This is the highest privilege level.
+ * - Regular users (staff, clients) can only view appointments they are a part of and cannot modify them.
+ * - Users can only manage their own profile and integration data. Availability is managed by the user or an office_assistant.
  * - Listing all users is disallowed to protect user privacy.
- * - Listing appointments is restricted to the 'office_assistant' role to prevent data leakage, as Firestore rules
+ * - Listing all appointments is restricted to the 'office_assistant' role to prevent data leakage, as Firestore rules
  *   cannot enforce query constraints (e.g., `where` clauses) on `list` operations.
  *
  * Denormalization for Authorization: The `/appointments` documents contain denormalized `staffId` and `clientId`
  * fields. This is critical for efficient and secure authorization, allowing rules to determine if a user is a
  * participant in an appointment with a single document read, avoiding slow and costly `get` calls to other documents.
  *
- * Structural Segregation: User-private data like `availability_blocks` and `integrations` are stored in
- * subcollections under `/users/{userId}`. This structurally isolates one user's data from another's, making it
- * simple to write rules that grant access only to the data tree owner.
+ * Structural Segregation: User-private data like `integrations` are stored in subcollections under `/users/{userId}`.
+ * This structurally isolates one user's data from another's, making it simple to write rules that grant access only to the data tree owner.
+ * Availability blocks also follow this pattern, but with an explicit exception for the 'office_assistant' role.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -64,7 +66,7 @@ service cloud.firestore {
 
     /**
      * Checks if the authenticated user has the 'office_assistant' role.
-     * This requires a `get` call to the user's own profile document.
+     * This is the administrative role with wide-ranging permissions.
      */
     function isOfficeAssistant() {
       return isSignedIn() && getUserAuthData().data.role == 'office_assistant';
@@ -134,8 +136,8 @@ service cloud.firestore {
     /**
      * @description Manages user profile data.
      * @path /users/{userId}
-     * @allow (create) A new user signing up: `auth.uid == userId`.
      * @allow (get/update) An existing user accessing their own profile: `auth.uid == userId`.
+     * @allow (create) A new user signing up: `auth.uid == userId`.
      * @deny (list) Anyone attempting to list all users.
      * @deny (delete) Anyone attempting to delete a user account.
      * @deny (get/update) A user attempting to access another user's profile.
@@ -151,10 +153,10 @@ service cloud.firestore {
       /**
        * @description Manages a staff member's availability blocks.
        * @path /users/{userId}/availability_blocks/{availabilityBlockId}
-       * @allow (create/get/list/update/delete) The user who owns the availability: `auth.uid == userId`.
-       * @allow (create/get/list/update/delete) An Office Assistant managing any user's availability.
+       * @allow (any) The user who owns the availability: `auth.uid == userId`.
+       * @allow (any) An Office Assistant, who can manage any user's availability as an admin.
        * @deny (any) A regular user attempting to access another user's availability.
-       * @principle Enforces document ownership, with an override for a specific admin role.
+       * @principle Enforces document ownership, with a specific override for the `office_assistant` admin role.
        */
       match /availability_blocks/{availabilityBlockId} {
         allow get, list: if isOwner(userId) || isOfficeAssistant();
@@ -167,8 +169,8 @@ service cloud.firestore {
        * @description Manages a user's private integration data (e.g., API tokens).
        * @path /users/{userId}/integrations/{integrationId}
        * @allow (any) The user who owns the integration data: `auth.uid == userId`.
-       * @deny (any) Any user, including an Office Assistant, attempting to access another user's integration secrets.
-       * @principle Enforces strict document ownership for highly sensitive data.
+       * @deny (any) Any user, including an `office_assistant`, attempting to access another user's integration secrets.
+       * @principle Enforces strict document ownership for highly sensitive data with no exceptions.
        */
       match /integrations/{integrationId} {
         allow get, list: if isOwner(userId);
@@ -181,11 +183,11 @@ service cloud.firestore {
     /**
      * @description Manages shared appointment data between staff and clients.
      * @path /appointments/{appointmentId}
-     * @allow (get) The assigned staff member, the client, or an Office Assistant viewing an appointment.
+     * @allow (get) A participant (staff/client) or an Office Assistant viewing an appointment.
      * @allow (list/create/update/delete) An Office Assistant managing the schedule for everyone.
-     * @deny (list) Any non-Office Assistant user attempting to list all appointments.
+     * @deny (list) Any non-Office Assistant user attempting to list all appointments to prevent data leakage.
      * @deny (create/update/delete) A staff member or client attempting to modify an appointment directly.
-     * @principle Implements role-based access control (RBAC) for shared resources.
+     * @principle Implements role-based access control (RBAC) for shared resources, granting full control to the `office_assistant`.
      */
     match /appointments/{appointmentId} {
       allow get: if isParticipant(resource.data) || isOfficeAssistant();

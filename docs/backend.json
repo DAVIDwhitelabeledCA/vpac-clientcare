@@ -25,8 +25,12 @@
         },
         "role": {
           "type": "string",
-          "description": "Role of the user (e.g., staff, client, office assistant).",
-          "format": "string"
+          "description": "Role of the user, determining their permissions within the application.",
+          "enum": [
+            "staff",
+            "client",
+            "office_assistant"
+          ]
         }
       },
       "required": [
@@ -234,6 +238,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support Clarity Call's scheduling and video conferencing features, focusing on security and scalability. It leverages path-based ownership for user-specific data and a membership map for collaborative access, ensuring authorization independence. The key considerations are: \n\n1.  **Users Collection**: Stores user profiles. The `role` field determines access levels (staff, client, office assistant). The Office Assistant role can manage the schedule for everyone.\n2.  **Appointments Collection**: Stores appointment data, with references to staff and client users. Includes denormalized data: `staffId` and `clientId` for easy querying and rule definition. The status field (`scheduled`, `confirmed`, `cancelled`) explicitly models the appointment's state.\n3.  **AvailabilityBlocks Collection**: Stores staff availability blocks. Uses `staffId` to denote ownership. The structure enables straightforward querying of available slots for a given staff member.\n4.  **Integrations Collection**: Stores integration details for each user (Google Meet, Microsoft Teams, Quo).  Uses the `userId` field to connect integrations to specific users.\n\n**Authorization Independence (CRITICAL)**: Denormalization is key to achieving authorization independence. The `Appointments` collection stores `staffId` and `clientId` which are referenced in security rules to validate the requester's role and ownership without needing `get()` calls to other documents.\n\n**QAPs (Rules are not Filters)**: The structure facilitates secure `list` operations. Because Appointments are stored in a top-level collection with relevant user id's on each document, listing appointments for a specific staff or client only requires a single query with a `where` clause, instead of potentially insecure collection group queries. Furthermore, segregation of `AvailabilityBlocks` under each `User` ensures that only a user (or an Office Assistant) can view their own availability blocks."
+    "reasoning": "The Firestore structure is designed to support Clarity Call's scheduling and video conferencing features, focusing on security and scalability. It leverages path-based ownership for user-specific data and a role-based access control (RBAC) model for shared data. The key roles are: `client`, `staff`, and `office_assistant`. The `office_assistant` has global administrative privileges over scheduling. The key considerations are: \n\n1.  **Users Collection**: Stores user profiles. The `role` field determines access levels. The `office_assistant` role can manage schedules for everyone.\n2.  **Appointments Collection**: Stores appointment data, with references to staff and client users. Includes denormalized data: `staffId` and `clientId` for easy querying and rule definition. The status field (`scheduled`, `confirmed`, `cancelled`) explicitly models the appointment's state.\n3.  **AvailabilityBlocks Subcollection**: Stores staff availability blocks under each user. This enforces ownership, but allows an `office_assistant` to manage any staff member's availability.\n4.  **Integrations Subcollection**: Stores private integration details for each user (Google Meet, Microsoft Teams, Quo).  Access is strictly limited to the user who owns the data.\n\n**Authorization Independence (CRITICAL)**: Denormalization is key to achieving authorization independence. The `Appointments` collection stores `staffId` and `clientId` which are referenced in security rules to validate the requester's role and ownership without needing `get()` calls to other documents.\n\n**QAPs (Rules are not Filters)**: The structure facilitates secure `list` operations. Because Appointments are stored in a top-level collection with relevant user IDs on each document, an `office_assistant` can list all appointments, while clients and staff can only access their own through targeted queries (enforced by client-side code). Segregation of `AvailabilityBlocks` under each `User` ensures that only a user or an `office_assistant` can access them."
   }
 }
