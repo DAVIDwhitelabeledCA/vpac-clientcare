@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,8 +23,104 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  useFirestore,
+  useUser,
+  useCollection,
+  useMemoFirebase,
+  setDocumentNonBlocking,
+} from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [googleSheetId, setGoogleSheetId] = useState('');
+  const [appSheetUrl, setAppSheetUrl] = useState('');
+
+  const [isSavingGoogleSheets, setIsSavingGoogleSheets] = useState(false);
+  const [isSavingAppSheet, setIsSavingAppSheet] = useState(false);
+
+  const integrationsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'integrations');
+  }, [firestore, user]);
+
+  const { data: integrations } = useCollection<{
+    service: string;
+    spreadsheetId?: string;
+    appUrl?: string;
+  }>(integrationsQuery);
+
+  useEffect(() => {
+    if (integrations) {
+      const googleSheetsIntegration = integrations.find(
+        (int) => int.service === 'google-sheets'
+      );
+      if (googleSheetsIntegration?.spreadsheetId) {
+        setGoogleSheetId(googleSheetsIntegration.spreadsheetId);
+      }
+      const appSheetIntegration = integrations.find(
+        (int) => int.service === 'appsheet'
+      );
+      if (appSheetIntegration?.appUrl) {
+        setAppSheetUrl(appSheetIntegration.appUrl);
+      }
+    }
+  }, [integrations]);
+
+  const handleSaveGoogleSheets = async () => {
+    if (!user || !firestore) return;
+    setIsSavingGoogleSheets(true);
+    const integrationRef = doc(
+      firestore,
+      'users',
+      user.uid,
+      'integrations',
+      'google-sheets'
+    );
+    const data = {
+      id: 'google-sheets',
+      userId: user.uid,
+      service: 'google-sheets',
+      spreadsheetId: googleSheetId,
+    };
+    setDocumentNonBlocking(integrationRef, data, { merge: true });
+    toast({
+      title: 'Settings Saved',
+      description: 'Your Google Sheets integration has been updated.',
+    });
+    setTimeout(() => setIsSavingGoogleSheets(false), 1500);
+  };
+
+  const handleSaveAppSheet = async () => {
+    if (!user || !firestore) return;
+    setIsSavingAppSheet(true);
+    const integrationRef = doc(
+      firestore,
+      'users',
+      user.uid,
+      'integrations',
+      'appsheet'
+    );
+    const data = {
+      id: 'appsheet',
+      userId: user.uid,
+      service: 'appsheet',
+      appUrl: appSheetUrl,
+    };
+    setDocumentNonBlocking(integrationRef, data, { merge: true });
+    toast({
+      title: 'Settings Saved',
+      description: 'Your AppSheet configuration has been updated.',
+    });
+    setTimeout(() => setIsSavingAppSheet(false), 1500);
+  };
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -59,7 +158,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Accordion type="single" collapsible className="w-full">
+              <Accordion type="single" collapsible className="w-full" defaultValue='google-sheets'>
                 <AccordionItem value="google-meet">
                   <AccordionTrigger>Google Calendar & Meet</AccordionTrigger>
                   <AccordionContent className="space-y-4 pt-2">
@@ -103,9 +202,22 @@ export default function SettingsPage() {
                       <Input
                         id="sheets-spreadsheet-id"
                         placeholder="Enter your Google Sheet ID"
+                        value={googleSheetId}
+                        onChange={(e) => setGoogleSheetId(e.target.value)}
+                        disabled={isSavingGoogleSheets}
                       />
                     </div>
-                    <Button>Connect Google Sheets</Button>
+                    <Button
+                      onClick={handleSaveGoogleSheets}
+                      disabled={isSavingGoogleSheets}
+                    >
+                      {isSavingGoogleSheets && (
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isSavingGoogleSheets
+                        ? 'Saving...'
+                        : 'Connect Google Sheets'}
+                    </Button>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="appsheet">
@@ -120,9 +232,22 @@ export default function SettingsPage() {
                       <Input
                         id="appsheet-app-url"
                         placeholder="Enter your AppSheet App URL"
+                        value={appSheetUrl}
+                        onChange={(e) => setAppSheetUrl(e.target.value)}
+                        disabled={isSavingAppSheet}
                       />
                     </div>
-                    <Button>Save AppSheet Configuration</Button>
+                    <Button
+                      onClick={handleSaveAppSheet}
+                      disabled={isSavingAppSheet}
+                    >
+                      {isSavingAppSheet && (
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isSavingAppSheet
+                        ? 'Saving...'
+                        : 'Save AppSheet Configuration'}
+                    </Button>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="microsoft">

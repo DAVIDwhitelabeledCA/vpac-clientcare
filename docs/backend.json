@@ -137,7 +137,14 @@
         },
         "service": {
           "type": "string",
-          "description": "Name of the service (e.g., Google Meet, Microsoft Teams, Quo)."
+          "description": "Name of the service.",
+          "enum": [
+            "google-meet",
+            "microsoft-teams",
+            "quo",
+            "google-sheets",
+            "appsheet"
+          ]
         },
         "accessToken": {
           "type": "string",
@@ -146,14 +153,20 @@
         "refreshToken": {
           "type": "string",
           "description": "Refresh token for the service."
+        },
+        "spreadsheetId": {
+          "type": "string",
+          "description": "The ID of the Google Sheet."
+        },
+        "appUrl": {
+          "type": "string",
+          "description": "The URL of the AppSheet application."
         }
       },
       "required": [
         "id",
         "userId",
-        "service",
-        "accessToken",
-        "refreshToken"
+        "service"
       ]
     }
   },
