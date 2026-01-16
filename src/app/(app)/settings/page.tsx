@@ -60,8 +60,8 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="google">
-                  <AccordionTrigger>Google</AccordionTrigger>
+                <AccordionItem value="google-meet">
+                  <AccordionTrigger>Google Calendar & Meet</AccordionTrigger>
                   <AccordionContent className="space-y-4 pt-2">
                     <p className="text-sm text-muted-foreground">
                       Connect your Google account to sync calendars and create
@@ -87,6 +87,42 @@ export default function SettingsPage() {
                       />
                     </div>
                     <Button>Connect Google Account</Button>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="google-sheets">
+                  <AccordionTrigger>Google Sheets</AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Connect Google Sheets to look up client information from a
+                      spreadsheet.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="sheets-spreadsheet-id">
+                        Spreadsheet ID
+                      </Label>
+                      <Input
+                        id="sheets-spreadsheet-id"
+                        placeholder="Enter your Google Sheet ID"
+                      />
+                    </div>
+                    <Button>Connect Google Sheets</Button>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="appsheet">
+                  <AccordionTrigger>AppSheet</AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Integrate with an AppSheet application to view client
+                      records.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="appsheet-app-url">App URL</Label>
+                      <Input
+                        id="appsheet-app-url"
+                        placeholder="Enter your AppSheet App URL"
+                      />
+                    </div>
+                    <Button>Save AppSheet Configuration</Button>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="microsoft">
