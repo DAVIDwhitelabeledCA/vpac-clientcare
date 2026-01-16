@@ -6,40 +6,13 @@
       "type": "object",
       "description": "Represents a user in the Clarity Call application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the user.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "First name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the user."
-        },
-        "role": {
-          "type": "string",
-          "description": "Role of the user, determining their permissions within the application.",
-          "enum": [
-            "staff",
-            "client",
-            "office_assistant"
-          ]
-        }
+        "id": { "type": "string", "description": "Unique identifier for the User entity." },
+        "email": { "type": "string", "description": "Email address of the user.", "format": "email" },
+        "firstName": { "type": "string", "description": "First name of the user." },
+        "lastName": { "type": "string", "description": "Last name of the user." },
+        "role": { "type": "string", "description": "Role of the user, determining their permissions.", "enum": ["staff", "client", "office_assistant"] }
       },
-      "required": [
-        "id",
-        "email",
-        "firstName",
-        "lastName",
-        "role"
-      ]
+      "required": ["id", "email", "firstName", "lastName", "role"]
     },
     "Appointment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -47,211 +20,147 @@
       "type": "object",
       "description": "Represents a scheduled appointment.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Appointment entity."
-        },
-        "staffId": {
-          "type": "string",
-          "description": "Reference to User (Staff). (Relationship: User 1:N Appointment)"
-        },
-        "clientId": {
-          "type": "string",
-          "description": "Reference to User (Client). (Relationship: User 1:N Appointment)"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "Start time of the appointment.",
-          "format": "date-time"
-        },
-        "endTime": {
-          "type": "string",
-          "description": "End time of the appointment.",
-          "format": "date-time"
-        },
-        "meetingLink": {
-          "type": "string",
-          "description": "Link to the online meeting.",
-          "format": "uri"
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the appointment (e.g., scheduled, confirmed, cancelled)."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Appointment entity." },
+        "staffId": { "type": "string", "description": "Reference to User (Staff)." },
+        "clientId": { "type": "string", "description": "Reference to User (Client)." },
+        "startTime": { "type": "string", "description": "Start time of the appointment.", "format": "date-time" },
+        "endTime": { "type": "string", "description": "End time of the appointment.", "format": "date-time" },
+        "meetingLink": { "type": "string", "description": "Link to the online meeting.", "format": "uri" },
+        "status": { "type": "string", "description": "Status of the appointment (e.g., scheduled, confirmed, cancelled)." }
       },
-      "required": [
-        "id",
-        "staffId",
-        "clientId",
-        "startTime",
-        "endTime",
-        "meetingLink",
-        "status"
-      ]
+      "required": ["id", "staffId", "clientId", "startTime", "endTime", "status"]
+    },
+    "AppointmentDetail": {
+        "title": "AppointmentDetail",
+        "type": "object",
+        "description": "Stores additional details for an appointment.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the detail record."},
+            "appointmentId": { "type": "string", "description": "Reference to the Appointment."},
+            "reason": { "type": "string", "description": "Reason for the appointment."},
+            "notes": { "type": "string", "description": "Notes taken during the appointment."}
+        },
+        "required": ["id", "appointmentId"]
+    },
+    "CarePlanTask": {
+        "title": "CarePlanTask",
+        "type": "object",
+        "description": "A single task in a client's care plan.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the task."},
+            "clientId": { "type": "string", "description": "The client this task is for."},
+            "staffId": { "type": "string", "description": "The staff member who assigned the task."},
+            "task": { "type": "string", "description": "The description of the task."},
+            "status": { "type": "string", "enum": ["Pending", "Complete"]},
+            "date": { "type": "string", "format": "date"}
+        },
+        "required": ["id", "clientId", "staffId", "task", "status", "date"]
+    },
+    "MedicalRecord": {
+        "title": "MedicalRecord",
+        "type": "object",
+        "description": "Represents a medical record for a client.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the record."},
+            "clientId": { "type": "string", "description": "The client this record belongs to."},
+            "staffId": { "type": "string", "description": "The staff member who uploaded the record."},
+            "type": { "type": "string", "description": "The type of record (e.g., Lab Results, Medications)."},
+            "fileUrl": { "type": "string", "description": "A URL to the record file.", "format": "uri"},
+            "uploadDate": { "type": "string", "format": "date-time"}
+        },
+        "required": ["id", "clientId", "staffId", "type", "uploadDate"]
+    },
+    "DocumentTemplate": {
+        "title": "DocumentTemplate",
+        "type": "object",
+        "description": "A template for a document like a registration or privacy form.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string"},
+            "fileUrl": { "type": "string", "format": "uri"}
+        },
+        "required": ["id", "title"]
+    },
+    "ClientDocument": {
+        "title": "ClientDocument",
+        "type": "object",
+        "description": "Represents a document submitted by a client.",
+        "properties": {
+            "id": { "type": "string"},
+            "clientId": { "type": "string"},
+            "templateId": { "type": "string"},
+            "fileUrl": { "type": "string", "format": "uri"},
+            "uploadDate": { "type": "string", "format": "date-time"}
+        },
+        "required": ["id", "clientId", "templateId", "uploadDate"]
     },
     "AvailabilityBlock": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AvailabilityBlock",
       "type": "object",
-      "description": "Represents a block of time when a staff member is available for appointments.",
+      "description": "Represents a block of time when a staff member is available.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AvailabilityBlock entity."
-        },
-        "staffId": {
-          "type": "string",
-          "description": "Reference to User (Staff). (Relationship: User 1:N AvailabilityBlock)"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "Start time of the availability block.",
-          "format": "date-time"
-        },
-        "endTime": {
-          "type": "string",
-          "description": "End time of the availability block.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "staffId": { "type": "string" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "staffId",
-        "startTime",
-        "endTime"
-      ]
+      "required": ["id", "staffId", "startTime", "endTime"]
     },
     "Integration": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Integration",
       "type": "object",
       "description": "Represents an integration with a third-party service.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Integration entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Integration)"
-        },
-        "service": {
-          "type": "string",
-          "description": "Name of the service.",
-          "enum": [
-            "google-meet",
-            "microsoft-teams",
-            "quo",
-            "google-sheets",
-            "appsheet"
-          ]
-        },
-        "accessToken": {
-          "type": "string",
-          "description": "Access token for the service."
-        },
-        "refreshToken": {
-          "type": "string",
-          "description": "Refresh token for the service."
-        },
-        "spreadsheetId": {
-          "type": "string",
-          "description": "The ID of the Google Sheet."
-        },
-        "appUrl": {
-          "type": "string",
-          "description": "The URL of the AppSheet application."
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "service": { "type": "string", "enum": ["google-meet", "microsoft-teams", "quo", "google-sheets", "appsheet"] },
+        "accessToken": { "type": "string" }, "refreshToken": { "type": "string" },
+        "spreadsheetId": { "type": "string" }, "appUrl": { "type": "string" }
       },
-      "required": [
-        "id",
-        "userId",
-        "service"
-      ]
+      "required": ["id", "userId", "service"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "google.com",
-      "apple.com"
-    ]
+    "providers": ["password", "google.com", "apple.com"]
   },
   "firestore": {
     "structure": [
       {
         "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Includes user roles for authorization.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/appointments/{appointmentId}",
-        "definition": {
-          "entityName": "Appointment",
-          "schema": {
-            "$ref": "#/backend/entities/Appointment"
-          },
-          "description": "Stores appointment details. Includes denormalized 'staffId' and 'clientId' for authorization independence.",
-          "params": [
-            {
-              "name": "appointmentId",
-              "description": "The unique identifier for the appointment."
-            }
-          ]
-        }
+        "definition": { "entityName": "User", "schema": { "$ref": "#/backend/entities/User" }, "description": "Stores user profiles." }
       },
       {
         "path": "/users/{userId}/availability_blocks/{availabilityBlockId}",
-        "definition": {
-          "entityName": "AvailabilityBlock",
-          "schema": {
-            "$ref": "#/backend/entities/AvailabilityBlock"
-          },
-          "description": "Stores availability blocks for each staff member.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user (staff member)."
-            },
-            {
-              "name": "availabilityBlockId",
-              "description": "The unique identifier for the availability block."
-            }
-          ]
-        }
+        "definition": { "entityName": "AvailabilityBlock", "schema": { "$ref": "#/backend/entities/AvailabilityBlock" }, "description": "Stores availability for staff." }
       },
       {
         "path": "/users/{userId}/integrations/{integrationId}",
-        "definition": {
-          "entityName": "Integration",
-          "schema": {
-            "$ref": "#/backend/entities/Integration"
-          },
-          "description": "Stores integration details for each user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "integrationId",
-              "description": "The unique identifier for the integration."
-            }
-          ]
-        }
+        "definition": { "entityName": "Integration", "schema": { "$ref": "#/backend/entities/Integration" }, "description": "Stores user-specific integration secrets." }
+      },
+      {
+          "path": "/users/{userId}/care_plan_tasks/{taskId}",
+          "definition": { "entityName": "CarePlanTask", "schema": { "$ref": "#/backend/entities/CarePlanTask"}, "description": "Tasks for a client's care plan."}
+      },
+      {
+          "path": "/users/{userId}/records/{recordId}",
+          "definition": { "entityName": "MedicalRecord", "schema": { "$ref": "#/backend/entities/MedicalRecord"}, "description": "Medical records for a client."}
+      },
+      {
+          "path": "/users/{userId}/documents/{documentId}",
+          "definition": { "entityName": "ClientDocument", "schema": { "$ref": "#/backend/entities/ClientDocument"}, "description": "Documents submitted by a client."}
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": { "entityName": "Appointment", "schema": { "$ref": "#/backend/entities/Appointment" }, "description": "Stores appointment details." }
+      },
+      {
+          "path": "/appointments/{appointmentId}/details/{detailId}",
+          "definition": { "entityName": "AppointmentDetail", "schema": { "$ref": "#/backend/entities/AppointmentDetail"}, "description": "Additional details for an appointment."}
+      },
+      {
+          "path": "/document_templates/{templateId}",
+          "definition": { "entityName": "DocumentTemplate", "schema": { "$ref": "#/backend/entities/DocumentTemplate"}, "description": "Master templates for documents."}
       }
-    ],
-    "reasoning": "The Firestore structure is designed to support Clarity Call's scheduling and video conferencing features, focusing on security and scalability. It leverages path-based ownership for user-specific data and a role-based access control (RBAC) model for shared data. The key roles are: `client`, `staff`, and `office_assistant`. The `office_assistant` has global administrative privileges over scheduling. The key considerations are: \n\n1.  **Users Collection**: Stores user profiles. The `role` field determines access levels. The `office_assistant` role can manage schedules for everyone.\n2.  **Appointments Collection**: Stores appointment data, with references to staff and client users. Includes denormalized data: `staffId` and `clientId` for easy querying and rule definition. The status field (`scheduled`, `confirmed`, `cancelled`) explicitly models the appointment's state.\n3.  **AvailabilityBlocks Subcollection**: Stores staff availability blocks under each user. This enforces ownership, but allows an `office_assistant` to manage any staff member's availability.\n4.  **Integrations Subcollection**: Stores private integration details for each user (Google Meet, Microsoft Teams, Quo).  Access is strictly limited to the user who owns the data.\n\n**Authorization Independence (CRITICAL)**: Denormalization is key to achieving authorization independence. The `Appointments` collection stores `staffId` and `clientId` which are referenced in security rules to validate the requester's role and ownership without needing `get()` calls to other documents.\n\n**QAPs (Rules are not Filters)**: The structure facilitates secure `list` operations. Because Appointments are stored in a top-level collection with relevant user IDs on each document, an `office_assistant` can list all appointments, while clients and staff can only access their own through targeted queries (enforced by client-side code). Segregation of `AvailabilityBlocks` under each `User` ensures that only a user or an `office_assistant` can access them."
+    ]
   }
 }

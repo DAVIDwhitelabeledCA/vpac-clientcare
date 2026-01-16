@@ -1,200 +1,56 @@
-/**
- * Core Philosophy: This ruleset enforces a hybrid security model. It uses strict user-ownership for sensitive,
- * user-specific data (like integrations) and a role-based access control (RBAC) model for collaborative and
- * administrative data (users, appointments, availability).
- *
- * A special 'office_assistant' role is granted broad privileges to manage scheduling across the entire
- * application, reflecting a key business requirement for centralized administration.
- *
- * Data Structure: The data is organized into top-level collections for shared data (`/users`, `/appointments`)
- * and user-specific subcollections for private data (`/users/{userId}/availability_blocks`, `/users/{userId}/integrations`).
- * This structure provides clear ownership boundaries and facilitates secure, performant queries.
- *
- * Key Security Decisions:
- * - A global 'office_assistant' role can manage all appointments and availability blocks for any user. This is the highest privilege level.
- * - Regular users (staff, clients) can only view appointments they are a part of and cannot modify them.
- * - Users can only manage their own profile and integration data. Availability is managed by the user or an office_assistant.
- * - Listing all users is disallowed to protect user privacy.
- * - Listing all appointments is restricted to the 'office_assistant' role to prevent data leakage, as Firestore rules
- *   cannot enforce query constraints (e.g., `where` clauses) on `list` operations.
- *
- * Denormalization for Authorization: The `/appointments` documents contain denormalized `staffId` and `clientId`
- * fields. This is critical for efficient and secure authorization, allowing rules to determine if a user is a
- * participant in an appointment with a single document read, avoiding slow and costly `get` calls to other documents.
- *
- * Structural Segregation: User-private data like `integrations` are stored in subcollections under `/users/{userId}`.
- * This structurally isolates one user's data from another's, making it simple to write rules that grant access only to the data tree owner.
- * Availability blocks also follow this pattern, but with an explicit exception for the 'office_assistant' role.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------------------
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isOwnerOfExistingDoc(userId) { return isOwner(userId) && resource != null; }
+    function getUserAuthData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function isOfficeAssistant() { return isSignedIn() && getUserAuthData().data.role == 'office_assistant'; }
+    function isParticipant(appointmentData) { return isSignedIn() && (request.auth.uid == appointmentData.staffId || request.auth.uid == appointmentData.clientId); }
 
-    /**
-     * Checks if the user is authenticated.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the foundation for the ownership model.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * Checks for ownership on an existing document. Used for secure updates and deletes.
-     */
-    function isOwnerOfExistingDoc(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * Retrieves the authenticated user's profile document from the /users collection.
-     * Caches the result of the `get` call for the duration of the rule evaluation.
-     */
-    function getUserAuthData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    /**
-     * Checks if the authenticated user has the 'office_assistant' role.
-     * This is the administrative role with wide-ranging permissions.
-     */
-    function isOfficeAssistant() {
-      return isSignedIn() && getUserAuthData().data.role == 'office_assistant';
-    }
-
-    /**
-     * Checks if the requesting user is a participant (staff or client) in an appointment.
-     * Relies on denormalized data on the appointment document.
-     */
-    function isParticipant(appointmentData) {
-      return isSignedIn() && (request.auth.uid == appointmentData.staffId || request.auth.uid == appointmentData.clientId);
-    }
-
-    /**
-     * Validates that the user ID in the document matches the path ID upon creation.
-     */
-    function isConsistentUserId(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * Validates that the user ID field is immutable on update.
-     */
-    function isUserIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that the user role is immutable on update.
-     */
-    function isRoleImmutable() {
-      return request.resource.data.role == resource.data.role;
-    }
-
-    /**
-     * Validates that the staff ID in an availability block matches the user path ID upon creation.
-     */
-    function isConsistentStaffId(userId) {
-      return request.resource.data.staffId == userId;
-    }
-
-    /**
-     * Validates that the staff ID field is immutable on update for availability blocks.
-     */
-    function isStaffIdImmutable() {
-      return request.resource.data.staffId == resource.data.staffId;
-    }
-
-    /**
-     * Validates that the userId in an integration record matches the user path ID upon creation.
-     */
-    function isConsistentIntegrationUserId(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Validates that the userId field is immutable on update for integrations.
-     */
-    function isIntegrationUserIdImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    // --------------------------------------------------------------------------------
-    // Collection Rules
-    // --------------------------------------------------------------------------------
-
-    /**
-     * @description Manages user profile data.
-     * @path /users/{userId}
-     * @allow (get/update) An existing user accessing their own profile: `auth.uid == userId`.
-     * @allow (create) A new user signing up: `auth.uid == userId`.
-     * @deny (list) Anyone attempting to list all users.
-     * @deny (delete) Anyone attempting to delete a user account.
-     * @deny (get/update) A user attempting to access another user's profile.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
+    // User profiles can only be read/updated by the owner. Cannot be deleted.
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && isConsistentUserId(userId);
-      allow update: if isOwnerOfExistingDoc(userId) && isUserIdImmutable() && isRoleImmutable();
-      allow delete: if false;
+      allow get, update: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow list, delete: if false;
 
-      /**
-       * @description Manages a staff member's availability blocks.
-       * @path /users/{userId}/availability_blocks/{availabilityBlockId}
-       * @allow (any) The user who owns the availability: `auth.uid == userId`.
-       * @allow (any) An Office Assistant, who can manage any user's availability as an admin.
-       * @deny (any) A regular user attempting to access another user's availability.
-       * @principle Enforces document ownership, with a specific override for the `office_assistant` admin role.
-       */
-      match /availability_blocks/{availabilityBlockId} {
-        allow get, list: if isOwner(userId) || isOfficeAssistant();
-        allow create: if (isOwner(userId) || isOfficeAssistant()) && isConsistentStaffId(userId);
-        allow update: if (isOwnerOfExistingDoc(userId) || isOfficeAssistant()) && resource != null && isStaffIdImmutable();
-        allow delete: if (isOwnerOfExistingDoc(userId) || isOfficeAssistant()) && resource != null;
+      // User-specific subcollections for private or owned data
+      match /availability_blocks/{blockId} {
+        allow read, write: if isOwner(userId) || isOfficeAssistant();
       }
-
-      /**
-       * @description Manages a user's private integration data (e.g., API tokens).
-       * @path /users/{userId}/integrations/{integrationId}
-       * @allow (any) The user who owns the integration data: `auth.uid == userId`.
-       * @deny (any) Any user, including an `office_assistant`, attempting to access another user's integration secrets.
-       * @principle Enforces strict document ownership for highly sensitive data with no exceptions.
-       */
       match /integrations/{integrationId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isConsistentIntegrationUserId(userId);
-        allow update: if isOwnerOfExistingDoc(userId) && isIntegrationUserIdImmutable();
-        allow delete: if isOwnerOfExistingDoc(userId);
+        allow read, write: if isOwner(userId);
+      }
+      // A client can see their own care plan, records, and documents.
+      // An office assistant can manage them for any user.
+      match /care_plan_tasks/{taskId} {
+        allow read, write: if isOwner(userId) || isOfficeAssistant();
+      }
+      match /records/{recordId} {
+        allow read, write: if isOwner(userId) || isOfficeAssistant();
+      }
+      match /documents/{documentId} {
+        allow read, write: if isOwner(userId) || isOfficeAssistant();
       }
     }
 
-    /**
-     * @description Manages shared appointment data between staff and clients.
-     * @path /appointments/{appointmentId}
-     * @allow (get) A participant (staff/client) or an Office Assistant viewing an appointment.
-     * @allow (list/create/update/delete) An Office Assistant managing the schedule for everyone.
-     * @deny (list) Any non-Office Assistant user attempting to list all appointments to prevent data leakage.
-     * @deny (create/update/delete) A staff member or client attempting to modify an appointment directly.
-     * @principle Implements role-based access control (RBAC) for shared resources, granting full control to the `office_assistant`.
-     */
+    // Appointments are managed by office assistants. Participants can view their own.
     match /appointments/{appointmentId} {
       allow get: if isParticipant(resource.data) || isOfficeAssistant();
-      allow list: if isOfficeAssistant();
-      allow create: if isOfficeAssistant();
-      allow update: if isOfficeAssistant() && resource != null;
-      allow delete: if isOfficeAssistant() && resource != null;
+      allow list, create, update, delete: if isOfficeAssistant();
+      
+      // Appointment details follow the same permissions as the parent appointment.
+      match /details/{detailId} {
+         allow read: if isParticipant(get(/databases/$(database)/documents/appointments/$(appointmentId)).data) || isOfficeAssistant();
+         allow write: if isOfficeAssistant();
+      }
+    }
+    
+    // Document templates are public to all signed-in users. Only admins can change them.
+    match /document_templates/{templateId} {
+        allow get: if isSignedIn();
+        allow write: if isOfficeAssistant();
     }
   }
 }

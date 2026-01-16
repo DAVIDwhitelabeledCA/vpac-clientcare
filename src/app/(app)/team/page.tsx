@@ -18,38 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { staffData } from '@/lib/mock-data';
 
-const teamMembers = [
-  {
-    name: 'Jane Doe',
-    role: 'Lead Consultant',
-    avatarId: 'avatar1',
-    nextAvailable: 'Tomorrow at 10:30 AM',
-  },
-  {
-    name: 'John Smith',
-    role: 'Senior Developer',
-    avatarId: 'avatar2',
-    nextAvailable: 'Today at 3:00 PM',
-  },
-  {
-    name: 'Michael Johnson',
-    role: 'Project Manager',
-    avatarId: 'avatar3',
-    nextAvailable: 'Friday at 9:00 AM',
-  },
-  {
-    name: 'Emily Davis',
-    role: 'UX Designer',
-    avatarId: 'avatar4',
-    nextAvailable: 'Tomorrow at 2:15 PM',
-  },
-];
-
-type TeamMember = (typeof teamMembers)[0];
+type TeamMember = (typeof staffData)[0];
 
 export default function TeamPage() {
-  const [selectedMember, setSelectedMember] = React.useState<TeamMember | null>(null);
+  const [selectedMember, setSelectedMember] =
+    React.useState<TeamMember | null>(null);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -60,7 +35,7 @@ export default function TeamPage() {
         Manage your team and check their availability.
       </p>
       <div className="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {teamMembers.map((member) => {
+        {staffData.map((member) => {
           const avatar = PlaceHolderImages.find(
             (img) => img.id === member.avatarId
           );
@@ -93,16 +68,17 @@ export default function TeamPage() {
           );
         })}
       </div>
-      <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
+      <Dialog
+        open={!!selectedMember}
+        onOpenChange={() => setSelectedMember(null)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedMember?.name}'s Availability
-            </DialogTitle>
+            <DialogTitle>{selectedMember?.name}'s Availability</DialogTitle>
             <DialogDescription>
-              Their next available slot is:{' '}
-              <span className="font-semibold text-primary">
-                {selectedMember?.nextAvailable}
+              Their calendar can be accessed via their Google Calendar ID:{' '}
+              <span className="font-semibold text-primary break-all">
+                {selectedMember?.calendarId || 'Not Available'}
               </span>
               .
             </DialogDescription>
