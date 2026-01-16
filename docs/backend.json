@@ -1,0 +1,239 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the Clarity Call application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user (e.g., staff, client, office assistant).",
+          "format": "string"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a scheduled appointment.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Appointment entity."
+        },
+        "staffId": {
+          "type": "string",
+          "description": "Reference to User (Staff). (Relationship: User 1:N Appointment)"
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to User (Client). (Relationship: User 1:N Appointment)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the appointment.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the appointment.",
+          "format": "date-time"
+        },
+        "meetingLink": {
+          "type": "string",
+          "description": "Link to the online meeting.",
+          "format": "uri"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the appointment (e.g., scheduled, confirmed, cancelled)."
+        }
+      },
+      "required": [
+        "id",
+        "staffId",
+        "clientId",
+        "startTime",
+        "endTime",
+        "meetingLink",
+        "status"
+      ]
+    },
+    "AvailabilityBlock": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AvailabilityBlock",
+      "type": "object",
+      "description": "Represents a block of time when a staff member is available for appointments.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AvailabilityBlock entity."
+        },
+        "staffId": {
+          "type": "string",
+          "description": "Reference to User (Staff). (Relationship: User 1:N AvailabilityBlock)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the availability block.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the availability block.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "staffId",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "Integration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Integration",
+      "type": "object",
+      "description": "Represents an integration with a third-party service.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Integration entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Integration)"
+        },
+        "service": {
+          "type": "string",
+          "description": "Name of the service (e.g., Google Meet, Microsoft Teams, Quo)."
+        },
+        "accessToken": {
+          "type": "string",
+          "description": "Access token for the service."
+        },
+        "refreshToken": {
+          "type": "string",
+          "description": "Refresh token for the service."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "service",
+        "accessToken",
+        "refreshToken"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Includes user roles for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment details. Includes denormalized 'staffId' and 'clientId' for authorization independence.",
+          "params": [
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier for the appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/availability_blocks/{availabilityBlockId}",
+        "definition": {
+          "entityName": "AvailabilityBlock",
+          "schema": {
+            "$ref": "#/backend/entities/AvailabilityBlock"
+          },
+          "description": "Stores availability blocks for each staff member.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user (staff member)."
+            },
+            {
+              "name": "availabilityBlockId",
+              "description": "The unique identifier for the availability block."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/integrations/{integrationId}",
+        "definition": {
+          "entityName": "Integration",
+          "schema": {
+            "$ref": "#/backend/entities/Integration"
+          },
+          "description": "Stores integration details for each user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "integrationId",
+              "description": "The unique identifier for the integration."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support Clarity Call's scheduling and video conferencing features, focusing on security and scalability. It leverages path-based ownership for user-specific data and a membership map for collaborative access, ensuring authorization independence. The key considerations are: \n\n1.  **Users Collection**: Stores user profiles. The `role` field determines access levels (staff, client, office assistant). The Office Assistant role can manage the schedule for everyone.\n2.  **Appointments Collection**: Stores appointment data, with references to staff and client users. Includes denormalized data: `staffId` and `clientId` for easy querying and rule definition. The status field (`scheduled`, `confirmed`, `cancelled`) explicitly models the appointment's state.\n3.  **AvailabilityBlocks Collection**: Stores staff availability blocks. Uses `staffId` to denote ownership. The structure enables straightforward querying of available slots for a given staff member.\n4.  **Integrations Collection**: Stores integration details for each user (Google Meet, Microsoft Teams, Quo).  Uses the `userId` field to connect integrations to specific users.\n\n**Authorization Independence (CRITICAL)**: Denormalization is key to achieving authorization independence. The `Appointments` collection stores `staffId` and `clientId` which are referenced in security rules to validate the requester's role and ownership without needing `get()` calls to other documents.\n\n**QAPs (Rules are not Filters)**: The structure facilitates secure `list` operations. Because Appointments are stored in a top-level collection with relevant user id's on each document, listing appointments for a specific staff or client only requires a single query with a `where` clause, instead of potentially insecure collection group queries. Furthermore, segregation of `AvailabilityBlocks` under each `User` ensures that only a user (or an Office Assistant) can view their own availability blocks."
+  }
+}
