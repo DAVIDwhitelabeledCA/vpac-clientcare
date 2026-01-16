@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   ArrowRight,
   CalendarDays,
   LayoutGrid,
+  LogOut,
   Settings,
   Users,
 } from 'lucide-react';
@@ -20,6 +21,9 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { Button } from '../ui/button';
 
 const links = [
   {
@@ -46,7 +50,15 @@ const links = [
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useUser();
+  const auth = useAuth();
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'avatar1');
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <>
@@ -83,18 +95,32 @@ export default function SidebarNav() {
         <div className="flex items-center gap-3 rounded-md border p-2">
           <Avatar>
             <AvatarImage
-              src={userAvatar?.imageUrl}
+              src={user?.photoURL ?? undefined}
               alt="User avatar"
-              data-ai-hint={userAvatar?.imageHint}
             />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarFallback>
+              {user?.displayName?.charAt(0) ??
+                user?.email?.charAt(0)?.toUpperCase() ??
+                'U'}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="font-semibold">Jane Doe</span>
-            <span className="text-sm text-muted-foreground">
-              jane.doe@example.com
+          <div className="flex flex-col overflow-hidden">
+            <span className="font-semibold truncate">
+              {user?.displayName ?? 'Anonymous'}
+            </span>
+            <span className="text-sm text-muted-foreground truncate">
+              {user?.email}
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto shrink-0"
+            onClick={handleLogout}
+            aria-label="Log out"
+          >
+            <LogOut className="size-4" />
+          </Button>
         </div>
       </SidebarFooter>
     </>
