@@ -5,6 +5,8 @@ import {
   ArrowUpRight,
   CalendarClock,
   Clock,
+  MessageSquare,
+  User,
   Video,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -29,7 +31,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useToast } from '@/hooks/use-toast';
 
 const appointments = [
   {
@@ -37,29 +46,36 @@ const appointments = [
     email: 'liam@example.com',
     time: '9:00 AM',
     avatarId: 'avatar2',
+    clientId: 'clientId-678901',
   },
   {
     name: 'Olivia Smith',
     email: 'olivia@example.com',
     time: '10:00 AM',
     avatarId: 'avatar4',
+    clientId: 'clientId-901234',
   },
   {
     name: 'Noah Williams',
     email: 'noah@example.com',
     time: '11:00 AM',
     avatarId: 'avatar3',
+    clientId: 'clientId-983308',
   },
   {
     name: 'Emma Brown',
     email: 'emma@example.com',
     time: '12:00 PM',
     avatarId: 'avatar1',
+    clientId: 'clientId-112345',
   },
 ];
 
 export default function Dashboard() {
-  const [chartData, setChartData] = useState<{ day: string; appointments: number }[]>([]);
+  const { toast } = useToast();
+  const [chartData, setChartData] = useState<
+    { day: string; appointments: number }[]
+  >([]);
 
   useEffect(() => {
     setChartData([
@@ -70,6 +86,20 @@ export default function Dashboard() {
       { day: 'Fri', appointments: Math.floor(Math.random() * 10) },
     ]);
   }, []);
+
+  const handleTextClient = (clientName: string) => {
+    toast({
+      title: 'SMS Feature (Quo Integration)',
+      description: `This would open a modal to send an SMS to ${clientName}.`,
+    });
+  };
+
+  const handleJoinCall = (clientName: string) => {
+    toast({
+      title: 'Initiating Meeting',
+      description: `This would open the virtual meeting link for ${clientName}.`,
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -139,7 +169,7 @@ export default function Dashboard() {
                 </CardDescription>
               </div>
               <Button asChild size="sm" className="ml-auto gap-1">
-                <Link href="/schedule">
+                <Link href="/clients">
                   View All
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
@@ -180,9 +210,33 @@ export default function Dashboard() {
                           <Badge variant="outline">{appt.time}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline">
-                            Join Call
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                Join Call
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleJoinCall(appt.name)}
+                              >
+                                <Video className="mr-2 h-4 w-4" />
+                                <span>Join Call</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleTextClient(appt.name)}
+                              >
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                <span>SMS Client</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/clients/${appt.clientId}`}>
+                                  <User className="mr-2 h-4 w-4" />
+                                  <span>View Profile</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );
