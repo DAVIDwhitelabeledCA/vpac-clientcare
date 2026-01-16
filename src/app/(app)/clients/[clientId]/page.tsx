@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, use } from 'react';
 import { ArrowLeft, User } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,9 +28,9 @@ import ClientDocuments from '@/components/client/client-documents';
 export default function ClientDetailPage({
   params,
 }: {
-  params: { clientId: string };
+  params: Promise<{ clientId: string }>;
 }) {
-  const { clientId } = params;
+  const { clientId } = use(params);
 
   const client = useMemo(() => {
     return allClientsData.find((c) => c.clientId === clientId);
