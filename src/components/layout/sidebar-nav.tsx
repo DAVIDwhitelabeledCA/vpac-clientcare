@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   ArrowRight,
   CalendarDays,
+  Contact,
   LayoutGrid,
   LogOut,
   Settings,
@@ -35,6 +36,11 @@ const links = [
     href: '/schedule',
     label: 'Schedule',
     icon: CalendarDays,
+  },
+  {
+    href: '/clients',
+    label: 'Clients',
+    icon: Contact,
   },
   {
     href: '/team',
