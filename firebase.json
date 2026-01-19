@@ -3,7 +3,21 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "storage": {
-    "rules": "storage.rules"
+  "storage": [
+    {
+      "bucket": "studio-2120461843-5ad32.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ],
+  "apphosting": {
+    "backendId": "vpac-client-care-demo",
+    "rootDir": ".",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
   }
 }
