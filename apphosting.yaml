@@ -5,3 +5,38 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# Environment variables for the application
+# These will be available to your Next.js app at runtime
+env:
+  # Firebase Configuration
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: "studio-2120461843-5ad32"
+  NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyBCskj140uBcMCywLzqoPOG7dF7jtIsbn8"
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "studio-2120461843-5ad32.firebaseapp.com"
+  NEXT_PUBLIC_FIREBASE_APP_ID: "1:1015941417156:web:2b3a2fcc320cc94be16191"
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "1015941417156"
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "studio-2120461843-5ad32.firebasestorage.app"
+  FIREBASE_PROJECT_ID: "studio-2120461843-5ad32"
+  
+  # Google OAuth (for Calendar/Meet integration)
+  GOOGLE_CLIENT_ID: "1015941417156-4inhugshr0o1st1nj58dtjp8roap8rpt.apps.googleusercontent.com"
+  GOOGLE_CLIENT_SECRET: "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"
+  GOOGLE_REDIRECT_URI: "https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/google/callback"
+  
+  # Microsoft OAuth (for Calendar/Teams integration)
+  MICROSOFT_CLIENT_ID: "e8c4c87a-3ad6-498c-8321-c0d580d3db9e"
+  MICROSOFT_CLIENT_SECRET: "f91ffa64-3fc1-438b-af95-9b32d0b74518"
+  MICROSOFT_TENANT_ID: "common"
+  MICROSOFT_REDIRECT_URI: "https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/microsoft/callback"
+  
+  # OpenPhone SMS Integration
+  OPENPHONE_API_KEY: "7ghvjT0qojWqvqZKrjFqrYIqd4K67Lh7"
+  OPENPHONE_API_BASE: "https://api.openphone.com/v1"
+  
+  # Application URL (production)
+  NEXT_PUBLIC_APP_URL: "https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app"
+  
+  # Firebase Service Account (JSON string)
+  # IMPORTANT: Set this in Firebase Console → App Hosting → Environment Variables
+  # Do NOT commit actual credentials to git. Use Secret Manager or Firebase Console.
+  # FIREBASE_SERVICE_ACCOUNT: "Set this in Firebase Console with your service account JSON"
