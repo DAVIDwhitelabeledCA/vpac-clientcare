@@ -58,7 +58,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: GOOGLE_REDIRECT_URI
-    value: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/google/callback
+    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/google/callback
     availability:
       - BUILD
       - RUNTIME
@@ -80,7 +80,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: MICROSOFT_REDIRECT_URI
-    value: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/microsoft/callback
+    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/microsoft/callback
     availability:
       - BUILD
       - RUNTIME
@@ -99,7 +99,7 @@ env:
   
   # Application URL
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app
+    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app
     availability:
       - BUILD
       - RUNTIME
