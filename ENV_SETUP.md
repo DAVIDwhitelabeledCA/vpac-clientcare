@@ -6,15 +6,15 @@ Add the following to your `.env.local` file:
 
 ```bash
 # OpenPhone API Configuration
-OPENPHONE_API_KEY=7ghvjT0qojWqvqZKrjFqrYIqd4K67Lh7
-OPENPHONE_PHONE_NUMBER_ID=2363058324
+OPENPHONE_API_KEY=your_openphone_api_key_here
+OPENPHONE_PHONE_NUMBER_ID=your_phone_number_id_here
 OPENPHONE_API_BASE=https://api.openphone.com/v1  # Optional, defaults to this
 
 # Optional: Scheduler authentication (for scheduled job endpoints)
 SCHEDULER_SECRET=your_random_secret_key_here
 ```
 
-**Note**: The credentials above are already configured. Make sure they're in your `.env.local` file.
+**Note**: Get your OpenPhone API credentials from your OpenPhone dashboard.
 
 ## Firebase Configuration
 

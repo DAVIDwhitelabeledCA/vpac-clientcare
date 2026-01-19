@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
       // If Admin SDK fails, try using Firebase REST API to verify token
       if (error.message?.includes('Project Id') || error.message?.includes('credential')) {
         console.warn('Firebase Admin SDK not available, using REST API to verify token');
-        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBCskj140uBcMCywLzqoPOG7dF7jtIsbn8';
+        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+        if (!apiKey) {
+          throw new Error('NEXT_PUBLIC_FIREBASE_API_KEY environment variable is required');
+        }
         const verifyResponse = await fetch(
           `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
           {

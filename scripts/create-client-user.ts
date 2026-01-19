@@ -4,9 +4,16 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin with project ID
 if (!getApps().length) {
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  
+  if (!projectId) {
+    console.error('❌ Error: FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID is required');
+    process.exit(1);
+  }
+
   try {
     initializeApp({
-      projectId: 'studio-2120461843-5ad32',
+      projectId,
     });
   } catch (e) {
     console.error('Failed to initialize Firebase Admin:', e);

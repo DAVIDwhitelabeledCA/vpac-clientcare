@@ -1,10 +1,20 @@
 // Simple script to create admin user using Firebase REST API
 // This uses the Firebase Auth REST API directly
+// 
+// REQUIRED ENVIRONMENT VARIABLES:
+// - NEXT_PUBLIC_FIREBASE_API_KEY: Your Firebase Web API Key
+// - ADMIN_EMAIL: Email for the admin user (default: admin@whitelabeled.ca)
+// - ADMIN_PASSWORD: Password for the admin user (default: !23$Vpac)
 
-const adminEmail = 'admin@whitelabeled.ca';
-const adminPassword = '!23$Vpac';
-const projectId = 'studio-2120461843-5ad32';
-const apiKey = 'AIzaSyBCskj140uBcMCywLzqoPOG7dF7jtIsbn8';
+const adminEmail = process.env.ADMIN_EMAIL || 'admin@whitelabeled.ca';
+const adminPassword = process.env.ADMIN_PASSWORD || '!23$Vpac';
+const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+
+if (!apiKey) {
+  console.error('❌ Error: NEXT_PUBLIC_FIREBASE_API_KEY environment variable is required');
+  console.error('Please set it in your .env.local file or export it before running this script.');
+  process.exit(1);
+}
 
 async function createAdminUser() {
   try {

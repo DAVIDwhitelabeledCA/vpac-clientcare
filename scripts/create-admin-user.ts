@@ -2,11 +2,25 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
+// REQUIRED ENVIRONMENT VARIABLES:
+// - FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID: Your Firebase project ID
+// - ADMIN_EMAIL: Email for the admin user (default: admin@whitelabeled.ca)
+// - ADMIN_PASSWORD: Password for the admin user (default: !23$Vpac)
+// - Firebase Admin credentials (via GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_SERVICE_ACCOUNT, or ADC)
+
+const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+if (!projectId) {
+  console.error('❌ Error: FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID is required');
+  console.error('Please set it in your .env.local file or export it before running this script.');
+  process.exit(1);
+}
+
 // Initialize Firebase Admin with project ID
 if (!getApps().length) {
   try {
     initializeApp({
-      projectId: 'studio-2120461843-5ad32',
+      projectId,
     });
   } catch (e) {
     console.error('Failed to initialize Firebase Admin:', e);
@@ -19,8 +33,8 @@ async function createAdminUser() {
     const auth = getAuth();
     const firestore = getFirestore();
 
-    const email = 'admin@whitelabeled.ca';
-    const password = '!23$Vpac';
+    const email = process.env.ADMIN_EMAIL || 'admin@whitelabeled.ca';
+    const password = process.env.ADMIN_PASSWORD || '!23$Vpac';
     const firstName = 'Admin';
     const lastName = 'User';
 

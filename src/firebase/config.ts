@@ -1,8 +1,11 @@
+// Firebase configuration from environment variables
+// For production, these should be set via Firebase App Hosting environment variables
+// For local development, set them in .env.local
 export const firebaseConfig = {
-  "projectId": "studio-2120461843-5ad32",
-  "appId": "1:1015941417156:web:2b3a2fcc320cc94be16191",
-  "apiKey": "AIzaSyBCskj140uBcMCywLzqoPOG7dF7jtIsbn8",
-  "authDomain": "studio-2120461843-5ad32.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "1015941417156"
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
 };
