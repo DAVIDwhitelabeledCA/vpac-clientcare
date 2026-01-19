@@ -7,7 +7,7 @@ export default function BookAppointmentPage() {
       <header className="mb-8 flex flex-col items-center text-center">
         <Logo />
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-4xl">
-          Clarity Call
+          VPAC Client Care
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
           Schedule your meeting with our team.

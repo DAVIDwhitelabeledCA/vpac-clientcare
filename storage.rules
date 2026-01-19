@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isOfficeAssistant() {
+      return isSignedIn() && getUserRole() == 'office_assistant';
+    }
+    
+    function isStaff() {
+      return isSignedIn() && (getUserRole() == 'staff' || getUserRole() == 'office_assistant');
+    }
+    
+    // Documents are stored in documents/{clientId}/{filename}
+    match /documents/{clientId}/{fileName} {
+      // Note: Files are accessed via signed URLs generated server-side
+      // These rules provide an additional layer of security
+      // Clients can read their own documents
+      // Staff can read any client's documents
+      allow read: if isSignedIn() && (
+        request.auth.uid == clientId || 
+        isStaff()
+      );
+      
+      // Only allow writes through the API (server-side using Admin SDK)
+      // Client-side uploads should go through the API endpoint which handles authentication
+      allow write: if false; // All writes go through the API route using Admin SDK
+    }
+    
+    // Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

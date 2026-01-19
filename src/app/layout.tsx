@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'Clarity Call',
-  description: 'Seamless video call scheduling for offices and clients.',
+  title: 'VPAC Client Care',
+  description: 'Healthcare client management and appointment booking system.',
 };
 
 export default function RootLayout({

@@ -31,15 +31,15 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
       // A client can see their own care plan, records, and documents.
-      // An office assistant can manage them for any user.
+      // Staff and office assistants can manage them for any user.
       match /care_plan_tasks/{taskId} {
-        allow read, write: if isOwner(userId) || isOfficeAssistant();
+        allow read, write: if isOwner(userId) || isOfficeAssistant() || isStaff();
       }
       match /records/{recordId} {
-        allow read, write: if isOwner(userId) || isOfficeAssistant();
+        allow read, write: if isOwner(userId) || isOfficeAssistant() || isStaff();
       }
       match /documents/{documentId} {
-        allow read, write: if isOwner(userId) || isOfficeAssistant();
+        allow read, write: if isOwner(userId) || isOfficeAssistant() || isStaff();
       }
     }
 

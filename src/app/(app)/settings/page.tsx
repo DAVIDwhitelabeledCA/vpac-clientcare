@@ -245,7 +245,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>API & Service Integrations</CardTitle>
               <CardDescription>
-                Connect Clarity Call to your favorite services.
+                Connect VPAC Client Care to your favorite services.
               </CardDescription>
             </CardHeader>
             <CardContent>

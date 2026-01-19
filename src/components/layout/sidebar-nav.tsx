@@ -71,7 +71,7 @@ export default function SidebarNav() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <Logo />
-          <span className="text-lg font-semibold">Clarity Call</span>
+          <span className="text-lg font-semibold">VPAC Client Care</span>
         </div>
       </SidebarHeader>
       <SidebarMenu className="flex-1">

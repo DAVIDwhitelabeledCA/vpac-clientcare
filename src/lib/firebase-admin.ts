@@ -1,13 +1,19 @@
 import { initializeApp, getApps, cert, App, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
 let adminApp: App | null = null;
 
-// Get project ID from environment or use default
+// Get project ID from environment variables
+// For Firebase App Hosting, this is automatically set
+// For local development, set FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env.local
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 
-                   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 
-                   'studio-2120461843-5ad32';
+                   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+if (!PROJECT_ID) {
+  console.warn('Warning: FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID not set. Firebase Admin may fail to initialize.');
+}
 
 export function getAdminApp(): App {
   if (adminApp) {
@@ -107,4 +113,8 @@ export function getAdminAuth() {
 
 export function getAdminFirestore() {
   return getFirestore(getAdminApp());
+}
+
+export function getAdminStorage() {
+  return getStorage(getAdminApp());
 }

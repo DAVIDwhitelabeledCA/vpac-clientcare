@@ -1,4 +1,4 @@
-# **App Name**: Clarity Call
+# **App Name**: VPAC Client Care
 
 ## Core Features:
 
