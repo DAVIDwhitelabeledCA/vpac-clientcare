@@ -65,12 +65,12 @@ env:
   
   # Microsoft OAuth
   - variable: MICROSOFT_CLIENT_ID
-    value: e8c4c87a-3ad6-498c-8321-c0d580d3db9e
+    value: ba35162a-4866-4333-8001-494c91b49f25
     availability:
       - BUILD
       - RUNTIME
   - variable: MICROSOFT_CLIENT_SECRET
-    value: f91ffa64-3fc1-438b-af95-9b32d0b74518
+    value: ffc0b419-2ea6-44b7-aaef-3bf26658d87b
     availability:
       - BUILD
       - RUNTIME
