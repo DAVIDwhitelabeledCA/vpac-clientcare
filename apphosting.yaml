@@ -48,12 +48,12 @@ env:
   
   # Google OAuth
   - variable: GOOGLE_CLIENT_ID
-    value: 1015941417156-4inhugshr0o1st1nj58dtjp8roap8rpt.apps.googleusercontent.com
+    value: 1015941417156-g9valupsuktf1e7s10vthc4u057n3p01.apps.googleusercontent.com
     availability:
       - BUILD
       - RUNTIME
   - variable: GOOGLE_CLIENT_SECRET
-    value: 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
+    value: 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
     availability:
       - BUILD
       - RUNTIME
