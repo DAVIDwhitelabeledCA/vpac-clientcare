@@ -10,6 +10,7 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Logo } from '@/components/icons';
+import { UserInitializer } from '@/components/user-initializer';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -29,7 +30,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <UserInitializer />
+      {children}
+    </>
+  );
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

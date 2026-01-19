@@ -21,14 +21,27 @@
       "description": "Represents a scheduled appointment.",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the Appointment entity." },
-        "staffId": { "type": "string", "description": "Reference to User (Staff)." },
-        "clientId": { "type": "string", "description": "Reference to User (Client)." },
+        "staffId": { "type": "string", "description": "Reference to User (Staff). May be null for pending urgent appointments." },
+        "clientId": { "type": "string", "description": "Reference to User (Client). May be null for anonymous bookings." },
+        "clientName": { "type": "string", "description": "Client name (for urgent requests or anonymous bookings)." },
+        "clientEmail": { "type": "string", "description": "Client email (for urgent requests or anonymous bookings).", "format": "email" },
+        "clientPhone": { "type": "string", "description": "Client phone number (for urgent requests)." },
         "startTime": { "type": "string", "description": "Start time of the appointment.", "format": "date-time" },
         "endTime": { "type": "string", "description": "End time of the appointment.", "format": "date-time" },
         "meetingLink": { "type": "string", "description": "Link to the online meeting.", "format": "uri" },
-        "status": { "type": "string", "description": "Status of the appointment (e.g., scheduled, confirmed, cancelled)." }
+        "status": { 
+          "type": "string", 
+          "description": "Status of the appointment.", 
+          "enum": ["pending", "scheduled", "confirmed", "cancelled", "completed"],
+          "default": "scheduled"
+        },
+        "isUrgent": { "type": "boolean", "description": "Whether this is an urgent appointment request." },
+        "reason": { "type": "string", "description": "Reason for urgent appointment (required for urgent requests)." },
+        "requestedAt": { "type": "string", "description": "Timestamp when urgent request was created.", "format": "date-time" },
+        "assignedAt": { "type": "string", "description": "Timestamp when urgent appointment was assigned.", "format": "date-time" },
+        "assignedBy": { "type": "string", "description": "User ID of staff member who assigned the urgent appointment." }
       },
-      "required": ["id", "staffId", "clientId", "startTime", "endTime", "status"]
+      "required": ["id", "status"]
     },
     "AppointmentDetail": {
         "title": "AppointmentDetail",

@@ -29,10 +29,12 @@ import {
   useCollection,
   useMemoFirebase,
   setDocumentNonBlocking,
+  deleteDocumentNonBlocking,
 } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Loader } from 'lucide-react';
+import { Loader, CheckCircle2, XCircle } from 'lucide-react';
+import { initiateGoogleOAuth, initiateMicrosoftOAuth } from '@/lib/calendar-api';
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -44,6 +46,8 @@ export default function SettingsPage() {
 
   const [isSavingGoogleSheets, setIsSavingGoogleSheets] = useState(false);
   const [isSavingAppSheet, setIsSavingAppSheet] = useState(false);
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
+  const [isConnectingMicrosoft, setIsConnectingMicrosoft] = useState(false);
 
   const integrationsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -54,6 +58,9 @@ export default function SettingsPage() {
     service: string;
     spreadsheetId?: string;
     appUrl?: string;
+    googleEmail?: string;
+    microsoftEmail?: string;
+    connectedAt?: string;
   }>(integrationsQuery);
 
   useEffect(() => {
@@ -121,6 +128,90 @@ export default function SettingsPage() {
     setTimeout(() => setIsSavingAppSheet(false), 1500);
   };
 
+  const googleIntegration = integrations?.find((int) => int.service === 'google-meet');
+  const microsoftIntegration = integrations?.find((int) => int.service === 'microsoft-teams');
+
+  const handleConnectGoogle = async () => {
+    if (!user) return;
+    setIsConnectingGoogle(true);
+    try {
+      const authUrl = await initiateGoogleOAuth();
+      window.location.href = authUrl;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to initiate Google OAuth',
+        variant: 'destructive',
+      });
+      setIsConnectingGoogle(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!user || !firestore) return;
+    const integrationRef = doc(firestore, 'users', user.uid, 'integrations', 'google-meet');
+    deleteDocumentNonBlocking(integrationRef);
+    toast({
+      title: 'Disconnected',
+      description: 'Google Calendar integration has been disconnected.',
+    });
+  };
+
+  const handleConnectMicrosoft = async () => {
+    if (!user) return;
+    setIsConnectingMicrosoft(true);
+    try {
+      const authUrl = await initiateMicrosoftOAuth();
+      window.location.href = authUrl;
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to initiate Microsoft OAuth',
+        variant: 'destructive',
+      });
+      setIsConnectingMicrosoft(false);
+    }
+  };
+
+  const handleDisconnectMicrosoft = async () => {
+    if (!user || !firestore) return;
+    const integrationRef = doc(firestore, 'users', user.uid, 'integrations', 'microsoft-teams');
+    deleteDocumentNonBlocking(integrationRef);
+    toast({
+      title: 'Disconnected',
+      description: 'Microsoft Calendar integration has been disconnected.',
+    });
+  };
+
+  // Check for OAuth callback success/error in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const error = params.get('error');
+
+    if (success === 'google_connected') {
+      toast({
+        title: 'Success',
+        description: 'Google Calendar has been connected successfully.',
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings');
+    } else if (success === 'microsoft_connected') {
+      toast({
+        title: 'Success',
+        description: 'Microsoft Calendar has been connected successfully.',
+      });
+      window.history.replaceState({}, '', '/settings');
+    } else if (error) {
+      toast({
+        title: 'Connection Failed',
+        description: `Failed to connect: ${error}`,
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, '', '/settings');
+    }
+  }, [toast]);
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -160,32 +251,63 @@ export default function SettingsPage() {
             <CardContent>
               <Accordion type="single" collapsible className="w-full" defaultValue='google-sheets'>
                 <AccordionItem value="google-meet">
-                  <AccordionTrigger>Google Calendar & Meet</AccordionTrigger>
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                      <span>Google Calendar & Meet</span>
+                      {googleIntegration ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </AccordionTrigger>
                   <AccordionContent className="space-y-4 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Connect your Google account to sync calendars and create
-                      Meet links.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="google-client-id">
-                        OAuth Client ID
-                      </Label>
-                      <Input
-                        id="google-client-id"
-                        placeholder="Enter your Google OAuth Client ID"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="google-client-secret">
-                        OAuth Client Secret
-                      </Label>
-                      <Input
-                        id="google-client-secret"
-                        type="password"
-                        placeholder="Enter your Google OAuth Client Secret"
-                      />
-                    </div>
-                    <Button>Connect Google Account</Button>
+                    {googleIntegration ? (
+                      <>
+                        <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <p className="font-medium text-green-900 dark:text-green-100">
+                              Connected
+                            </p>
+                          </div>
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            Connected as: {googleIntegration.googleEmail || 'Unknown'}
+                          </p>
+                          {googleIntegration.connectedAt && (
+                            <p className="text-xs text-green-700 dark:text-green-300">
+                              Connected on:{' '}
+                              {new Date(googleIntegration.connectedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDisconnectGoogle}
+                        >
+                          Disconnect Google Account
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Connect your Google account to sync calendars and create
+                          Meet links. Your calendar conflicts will be shown in the
+                          availability calendar.
+                        </p>
+                        <Button
+                          onClick={handleConnectGoogle}
+                          disabled={isConnectingGoogle}
+                        >
+                          {isConnectingGoogle && (
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          {isConnectingGoogle
+                            ? 'Connecting...'
+                            : 'Connect Google Account'}
+                        </Button>
+                      </>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="google-sheets">
@@ -251,30 +373,63 @@ export default function SettingsPage() {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="microsoft">
-                  <AccordionTrigger>Microsoft</AccordionTrigger>
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                      <span>Microsoft Calendar & Teams</span>
+                      {microsoftIntegration ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </AccordionTrigger>
                   <AccordionContent className="space-y-4 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Connect your Microsoft account to sync calendars and
-                      create Teams links.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="ms-client-id">
-                        Application (client) ID
-                      </Label>
-                      <Input
-                        id="ms-client-id"
-                        placeholder="Enter your Microsoft App Client ID"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ms-client-secret">Client Secret</Label>
-                      <Input
-                        id="ms-client-secret"
-                        type="password"
-                        placeholder="Enter your Microsoft Client Secret"
-                      />
-                    </div>
-                    <Button>Connect Microsoft Account</Button>
+                    {microsoftIntegration ? (
+                      <>
+                        <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <p className="font-medium text-green-900 dark:text-green-100">
+                              Connected
+                            </p>
+                          </div>
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            Connected as: {microsoftIntegration.microsoftEmail || 'Unknown'}
+                          </p>
+                          {microsoftIntegration.connectedAt && (
+                            <p className="text-xs text-green-700 dark:text-green-300">
+                              Connected on:{' '}
+                              {new Date(microsoftIntegration.connectedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDisconnectMicrosoft}
+                        >
+                          Disconnect Microsoft Account
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Connect your Microsoft account to sync calendars and
+                          create Teams links. Your calendar conflicts will be shown in the
+                          availability calendar.
+                        </p>
+                        <Button
+                          onClick={handleConnectMicrosoft}
+                          disabled={isConnectingMicrosoft}
+                        >
+                          {isConnectingMicrosoft && (
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          {isConnectingMicrosoft
+                            ? 'Connecting...'
+                            : 'Connect Microsoft Account'}
+                        </Button>
+                      </>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="quo">

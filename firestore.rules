@@ -5,8 +5,16 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     function isOwnerOfExistingDoc(userId) { return isOwner(userId) && resource != null; }
-    function getUserAuthData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function isOfficeAssistant() { return isSignedIn() && getUserAuthData().data.role == 'office_assistant'; }
+    function getUserAuthData() { 
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userData;
+    }
+    function getUserRole() {
+      let userData = getUserAuthData();
+      return userData != null && userData.data != null ? userData.data.role : null;
+    }
+    function isOfficeAssistant() { return isSignedIn() && getUserRole() == 'office_assistant'; }
+    function isStaff() { return isSignedIn() && getUserRole() == 'staff'; }
     function isParticipant(appointmentData) { return isSignedIn() && (request.auth.uid == appointmentData.staffId || request.auth.uid == appointmentData.clientId); }
 
     // User profiles can only be read/updated by the owner. Cannot be deleted.
@@ -36,9 +44,23 @@ service cloud.firestore {
     }
 
     // Appointments are managed by office assistants. Participants can view their own.
+    // Staff can list appointments to see their own schedule (query filters by staffId).
+    // Clients can create appointments (for booking and urgent requests).
+    // Allow authenticated users to list (they'll filter by staffId in the query anyway)
     match /appointments/{appointmentId} {
       allow get: if isParticipant(resource.data) || isOfficeAssistant();
-      allow list, create, update, delete: if isOfficeAssistant();
+      // Allow authenticated users to list appointments (query will filter by staffId)
+      // This allows staff to see their schedule even if user doc doesn't exist yet
+      allow list: if isSignedIn();
+      // Allow clients to create appointments (for booking and urgent requests)
+      // Allow staff/office assistants to create and update appointments
+      allow create: if isSignedIn() && (
+        request.resource.data.clientId == request.auth.uid || 
+        isOfficeAssistant() || 
+        isStaff()
+      );
+      allow update: if isOfficeAssistant() || isStaff();
+      allow delete: if isOfficeAssistant();
       
       // Appointment details follow the same permissions as the parent appointment.
       match /details/{detailId} {
