@@ -153,3 +153,85 @@ export async function createGoogleMeetLink(
 
   return await response.json();
 }
+
+/**
+ * Create a Microsoft Teams meeting link for an appointment
+ */
+export async function createTeamsMeetingLink(
+  startTime: string,
+  endTime: string,
+  summary?: string,
+  description?: string
+): Promise<{ eventId: string; meetLink: string; joinUrl: string; meetingId: string }> {
+  const idToken = await getIdToken();
+  const response = await fetch('/api/calendar/microsoft/teams-link', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      startTime,
+      endTime,
+      summary,
+      description,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create Teams meeting link');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Create a calendar event in Microsoft Outlook
+ * This creates an actual calendar event in the logged-in user's calendar
+ * with optional Teams meeting link
+ */
+export async function createOutlookCalendarEvent(
+  startTime: string,
+  endTime: string,
+  subject?: string,
+  body?: string,
+  location?: string,
+  attendees?: string[] | Array<{ email: string; name?: string }>,
+  isOnlineMeeting: boolean = true,
+  timeZone?: string
+): Promise<{ 
+  eventId: string; 
+  webLink: string; 
+  teamsLink: string | null;
+  subject: string;
+  start: any;
+  end: any;
+  onlineMeeting?: any;
+}> {
+  const idToken = await getIdToken();
+  const response = await fetch('/api/calendar/microsoft/event', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      startTime,
+      endTime,
+      subject,
+      body,
+      location,
+      attendees,
+      isOnlineMeeting,
+      timeZone,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create Outlook calendar event');
+  }
+
+  return await response.json();
+}

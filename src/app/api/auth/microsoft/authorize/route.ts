@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth } from '@/lib/firebase-admin';
+import { getMicrosoftAuthConfig } from '@/lib/microsoft-auth';
 
-const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
-const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common';
 const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'}/api/auth/microsoft/callback`;
 
@@ -15,7 +14,10 @@ async function verifyIdToken(idToken: string): Promise<{ uid: string }> {
     // If Admin SDK fails, try using Firebase REST API to verify token
     if (error.message?.includes('Project Id') || error.message?.includes('credential')) {
       console.warn('Firebase Admin SDK not available, using REST API to verify token');
-      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBCskj140uBcMCywLzqoPOG7dF7jtIsbn8';
+      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+      if (!apiKey) {
+        throw new Error('NEXT_PUBLIC_FIREBASE_API_KEY environment variable is required');
+      }
       const verifyResponse = await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
         {
@@ -50,25 +52,29 @@ export async function GET(request: NextRequest) {
     const idToken = authHeader.substring(7);
     const { uid: userId } = await verifyIdToken(idToken);
 
-    if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
+    try {
+      getMicrosoftAuthConfig();
+    } catch (error: any) {
       return NextResponse.json(
-        { error: 'Microsoft OAuth not configured. Please set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET environment variables.' },
+        { error: `Microsoft OAuth not configured: ${error.message}. Please set MICROSOFT_CLIENT_ID and either MICROSOFT_CLIENT_SECRET or certificate paths.` },
         { status: 500 }
       );
     }
+
+    const authConfig = getMicrosoftAuthConfig();
 
     // Generate state parameter with userId
     const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64url');
 
     // Microsoft OAuth scopes for Calendar and Teams
+    // Using Calendars.ReadWrite (not .All) to only access the signed-in user's calendar
     const scopes = [
-      'Calendars.Read',
       'Calendars.ReadWrite',
       'OnlineMeetings.ReadWrite',
     ].join(' ');
 
     const authUrl = new URL(`https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/oauth2/v2.0/authorize`);
-    authUrl.searchParams.set('client_id', MICROSOFT_CLIENT_ID);
+    authUrl.searchParams.set('client_id', authConfig.clientId);
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
     authUrl.searchParams.set('response_mode', 'query');

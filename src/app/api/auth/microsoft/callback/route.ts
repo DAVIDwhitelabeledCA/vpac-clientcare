@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminFirestore } from '@/lib/firebase-admin';
+import { getMicrosoftAuthConfig, getMicrosoftAuthParams } from '@/lib/microsoft-auth';
 
-const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
-const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common';
 const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'}/api/auth/microsoft/callback`;
 
@@ -32,6 +31,9 @@ export async function GET(request: NextRequest) {
     const { userId } = stateData;
 
     // Exchange authorization code for tokens
+    const authConfig = getMicrosoftAuthConfig();
+    const authParams = getMicrosoftAuthParams(authConfig);
+    
     const tokenUrl = `https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/oauth2/v2.0/token`;
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
@@ -39,12 +41,11 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: MICROSOFT_CLIENT_ID!,
-        client_secret: MICROSOFT_CLIENT_SECRET!,
+        ...authParams,
         code,
         redirect_uri: REDIRECT_URI,
         grant_type: 'authorization_code',
-        scope: 'Calendars.Read Calendars.ReadWrite OnlineMeetings.ReadWrite',
+        scope: 'Calendars.ReadWrite OnlineMeetings.ReadWrite',
       }),
     });
 

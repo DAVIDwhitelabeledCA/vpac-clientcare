@@ -57,6 +57,7 @@ import { upcomingClientsData } from '@/lib/mock-data';
 import { useUser } from '@/firebase';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
+import { CreateAppointmentDialog } from '@/components/create-appointment-dialog';
 
 interface PendingUrgentRequest {
   id: string;
@@ -101,6 +102,54 @@ export default function Dashboard() {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  // Create Microsoft Teams meetings for next 3 days when admin logs in
+  useEffect(() => {
+    const createBatchMeetings = async () => {
+      if (!user) return;
+
+      try {
+        const idToken = await user.getIdToken();
+        const response = await fetch('/api/appointments/create-microsoft-meetings', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.summary?.created > 0) {
+            const microsoftCount = data.summary.microsoft || 0;
+            const googleCount = data.summary.google || 0;
+            let description = `Created ${data.summary.created} meeting${data.summary.created !== 1 ? 's' : ''} for the next 3 days`;
+            if (microsoftCount > 0 && googleCount > 0) {
+              description += ` (${microsoftCount} Teams, ${googleCount} Google Meet)`;
+            } else if (microsoftCount > 0) {
+              description += ` (${microsoftCount} Teams)`;
+            } else if (googleCount > 0) {
+              description += ` (${googleCount} Google Meet)`;
+            }
+            toast({
+              title: 'Meetings Created',
+              description,
+            });
+          }
+        }
+      } catch (error) {
+        // Silently fail - don't interrupt user experience
+        console.error('Failed to create batch meetings:', error);
+      }
+    };
+
+    // Run once when admin logs in (with a small delay to ensure user is loaded)
+    // The API endpoint will check if user is admin/staff
+    if (user) {
+      const timer = setTimeout(createBatchMeetings, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, toast]);
 
   const fetchPendingUrgent = async () => {
     if (!user) return;
@@ -377,12 +426,18 @@ export default function Dashboard() {
                   Here are the appointments scheduled for today.
                 </CardDescription>
               </div>
-              <Button asChild size="sm" className="ml-auto gap-1">
-                <Link href="/clients">
-                  View All
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
+              <div className="ml-auto flex gap-2">
+                <CreateAppointmentDialog onSuccess={() => {
+                  // Refresh appointments if needed
+                  fetchPendingUrgent();
+                }} />
+                <Button asChild size="sm" className="gap-1">
+                  <Link href="/clients">
+                    View All
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>

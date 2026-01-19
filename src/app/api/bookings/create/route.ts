@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminFirestore } from '@/lib/firebase-admin';
+import { getAdminAuth, getAdminFirestore } from '@/lib/firebase-admin';
 import { checkSlotAvailability } from '@/lib/booking-helpers';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -18,6 +18,26 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
+
+    // Verify authentication
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    const adminAuth = getAdminAuth();
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    // Verify user is staff (if creating for someone else) or allow clients to create their own
+    const userDoc = await firestore.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const isStaff = userData?.role === 'staff' || userData?.role === 'office_assistant';
+
     const body = await request.json();
     
     const {
@@ -33,6 +53,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'staffId, startTime, and endTime are required' },
         { status: 400 }
+      );
+    }
+
+    // If staff is creating for a client, verify they have permission
+    // If client is creating their own, verify clientId matches their userId
+    if (clientId && clientId !== userId && !isStaff) {
+      return NextResponse.json(
+        { error: 'Forbidden: You can only create appointments for yourself' },
+        { status: 403 }
       );
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminFirestore } from '@/lib/firebase-admin';
+import { getMicrosoftAuthConfig, getMicrosoftAuthParams } from '@/lib/microsoft-auth';
 
 async function getValidAccessToken(userId: string): Promise<string> {
   const firestore = getAdminFirestore();
@@ -19,26 +20,24 @@ async function getValidAccessToken(userId: string): Promise<string> {
 
   // If token is expired or will expire in the next 5 minutes, refresh it
   if (Date.now() >= expiresAt - 5 * 60 * 1000) {
-    const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
-    const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
-    const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common';
-
-    if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET || !integration.refreshToken) {
-      throw new Error('Cannot refresh token: missing credentials');
+    if (!integration.refreshToken) {
+      throw new Error('Cannot refresh token: missing refresh token');
     }
 
-    const tokenUrl = `https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/oauth2/v2.0/token`;
+    const authConfig = getMicrosoftAuthConfig();
+    const authParams = getMicrosoftAuthParams(authConfig);
+
+    const tokenUrl = `https://login.microsoftonline.com/${authConfig.tenantId}/oauth2/v2.0/token`;
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: MICROSOFT_CLIENT_ID,
-        client_secret: MICROSOFT_CLIENT_SECRET,
+        ...authParams,
         refresh_token: integration.refreshToken,
         grant_type: 'refresh_token',
-        scope: 'Calendars.Read Calendars.ReadWrite OnlineMeetings.ReadWrite',
+        scope: 'Calendars.ReadWrite OnlineMeetings.ReadWrite',
       }),
     });
 

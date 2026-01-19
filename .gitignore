@@ -7,3 +7,13 @@ node_modules
 firebase-debug.log
 .DS_Store
 .vscode
+
+# Microsoft certificates (keep secure!)
+*.pem
+*.key
+*.cer
+*.pfx
+microsoft-*.pem
+microsoft-*.key
+microsoft-*.cer
+microsoft-*.pfx
