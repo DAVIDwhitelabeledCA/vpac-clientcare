@@ -1,6 +1,7 @@
 {
   "projects": {
-    "staginhg vpac": "studio-2120461843-5ad32"
+    "staginhg vpac": "studio-2120461843-5ad32",
+    "default": "studio-2120461843-5ad32"
   },
   "targets": {},
   "etags": {}

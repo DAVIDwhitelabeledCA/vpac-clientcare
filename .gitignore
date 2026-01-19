@@ -3,6 +3,7 @@ node_modules
 .env
 .env.local
 .env.*.local
+.env.local.bak
 .firebase
 firebase-debug.log
 .DS_Store
@@ -17,3 +18,7 @@ microsoft-*.pem
 microsoft-*.key
 microsoft-*.cer
 microsoft-*.pfx
+
+# Firebase service account keys (keep secure!)
+firebase-service-account-key.json
+*-service-account-key.json
