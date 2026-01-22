@@ -21,7 +21,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: studio-2120461843-5ad32.firebaseapp.com
+    value: app.vpac.ca
     availability:
       - BUILD
       - RUNTIME
@@ -53,12 +53,12 @@ env:
       - BUILD
       - RUNTIME
   - variable: GOOGLE_CLIENT_SECRET
-    value: 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
+    secret: google-client-secret
     availability:
       - BUILD
       - RUNTIME
   - variable: GOOGLE_REDIRECT_URI
-    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/google/callback
+    value: https://app.vpac.ca/api/auth/google/callback
     availability:
       - BUILD
       - RUNTIME
@@ -70,7 +70,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: MICROSOFT_CLIENT_SECRET
-    value: ffc0b419-2ea6-44b7-aaef-3bf26658d87b
+    secret: microsoft-client-secret
     availability:
       - BUILD
       - RUNTIME
@@ -80,7 +80,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: MICROSOFT_REDIRECT_URI
-    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/microsoft/callback
+    value: https://app.vpac.ca/api/auth/microsoft/callback
     availability:
       - BUILD
       - RUNTIME
@@ -99,7 +99,7 @@ env:
   
   # Application URL
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://vpac-client-care-demo--studio-2120461843-5ad32.us-central1.hosted.app
+    value: https://app.vpac.ca
     availability:
       - BUILD
       - RUNTIME
