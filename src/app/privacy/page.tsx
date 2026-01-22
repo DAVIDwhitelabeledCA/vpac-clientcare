@@ -156,6 +156,28 @@ export default function PrivacyPage() {
               </p>
             </div>
           </section>
+
+          <section className="mt-8 pt-6 border-t">
+            <div className="flex flex-wrap gap-4 justify-center text-sm text-muted-foreground">
+              <a 
+                href="https://whitelabeled.ca" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-foreground underline transition-colors"
+              >
+                Whitelabeled.ca
+              </a>
+              <span>•</span>
+              <a 
+                href="https://vitalpathaddictionclinic.ca" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-foreground underline transition-colors"
+              >
+                Vital Path Addiction Clinic
+              </a>
+            </div>
+          </section>
         </CardContent>
       </Card>
     </div>
