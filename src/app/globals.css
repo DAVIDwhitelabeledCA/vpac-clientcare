@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FirebaseUI styles */
+@import 'firebaseui/dist/firebaseui.css';
+
 @layer base {
   :root {
     --background: 0 0% 98%;
