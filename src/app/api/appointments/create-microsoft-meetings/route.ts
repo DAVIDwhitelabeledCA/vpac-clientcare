@@ -391,7 +391,7 @@ export async function POST(request: NextRequest) {
 
       const staffData = staffDoc.data();
       const staffName = `${staffData?.firstName || ''} ${staffData?.lastName || ''}`.trim() || 'Staff';
-      
+
       // Get client information
       let clientName = appointment.clientName || 'Client';
       let clientEmail = appointment.clientEmail || null;

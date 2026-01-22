@@ -77,14 +77,14 @@ export default function ClientDocuments({ clientEmail }: ClientDocumentsProps) {
         <DocumentUpload clientId={clientId} onUploadSuccess={handleUploadSuccess} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <FileText /> Client Documents
-          </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-3">
+          <FileText /> Client Documents
+        </CardTitle>
           <CardDescription>A list of all documents submitted by or for the client.</CardDescription>
-        </CardHeader>
-        <CardContent>
+      </CardHeader>
+      <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -101,18 +101,18 @@ export default function ClientDocuments({ clientEmail }: ClientDocumentsProps) {
               <DocumentUpload clientId={clientId} onUploadSuccess={handleUploadSuccess} />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document Name</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Document Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Upload Date</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <TableHead>Upload Date</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
                 {documents.map((doc) => (
-                  <TableRow key={doc.id}>
+              <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.fileName}</TableCell>
                     <TableCell>
                       <span className="capitalize">
@@ -122,23 +122,23 @@ export default function ClientDocuments({ clientEmail }: ClientDocumentsProps) {
                     <TableCell>
                       {format(doc.uploadDate, 'MMM d, yyyy h:mm a')}
                     </TableCell>
-                    <TableCell className="text-right">
+                <TableCell className="text-right">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDownload(doc.fileUrl, doc.fileName)}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    Download
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
           )}
-        </CardContent>
-      </Card>
+      </CardContent>
+    </Card>
     </div>
   );
 }

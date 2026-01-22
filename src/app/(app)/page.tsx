@@ -432,11 +432,11 @@ export default function Dashboard() {
                   fetchPendingUrgent();
                 }} />
                 <Button asChild size="sm" className="gap-1">
-                  <Link href="/clients">
-                    View All
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+                <Link href="/clients">
+                  View All
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
               </div>
             </CardHeader>
             <CardContent>

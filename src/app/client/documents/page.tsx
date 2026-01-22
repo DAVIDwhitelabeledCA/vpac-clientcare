@@ -40,11 +40,11 @@ export default function ClientDocumentsPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6" key={refreshKey}>
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
-          <p className="text-muted-foreground">
-            View and manage your submitted documents.
-          </p>
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
+        <p className="text-muted-foreground">
+          View and manage your submitted documents.
+        </p>
         </div>
         <DocumentUpload onUploadSuccess={handleUploadSuccess} />
       </div>
@@ -70,8 +70,8 @@ export default function ClientDocumentsPage() {
           ) : documents.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground mb-4">
-                You have not uploaded any documents yet.
-              </p>
+              You have not uploaded any documents yet.
+            </p>
               <DocumentUpload onUploadSuccess={handleUploadSuccess} />
             </div>
           ) : (

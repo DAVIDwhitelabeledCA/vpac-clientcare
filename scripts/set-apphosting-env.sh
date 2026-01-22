@@ -36,16 +36,16 @@ echo "FIREBASE_PROJECT_ID=studio-2120461843-5ad32"
 echo ""
 
 # Google OAuth
-echo "GOOGLE_CLIENT_ID=1015941417156-4inhugshr0o1st1nj58dtjp8roap8rpt.apps.googleusercontent.com"
-echo "GOOGLE_CLIENT_SECRET=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"
-echo "GOOGLE_REDIRECT_URI=https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/google/callback"
+echo "GOOGLE_CLIENT_ID=1015941417156-g9valupsuktf1e7s10vthc4u057n3p01.apps.googleusercontent.com"
+echo "GOOGLE_CLIENT_SECRET=<set via Secret Manager: google-client-secret>"
+echo "GOOGLE_REDIRECT_URI=https://app.vpac.ca/api/auth/google/callback"
 echo ""
 
 # Microsoft OAuth
-echo "MICROSOFT_CLIENT_ID=e8c4c87a-3ad6-498c-8321-c0d580d3db9e"
-echo "MICROSOFT_CLIENT_SECRET=f91ffa64-3fc1-438b-af95-9b32d0b74518"
+echo "MICROSOFT_CLIENT_ID=ba35162a-4866-4333-8001-494c91b49f25"
+echo "MICROSOFT_CLIENT_SECRET=<set via Secret Manager: microsoft-client-secret>"
 echo "MICROSOFT_TENANT_ID=common"
-echo "MICROSOFT_REDIRECT_URI=https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app/api/auth/microsoft/callback"
+echo "MICROSOFT_REDIRECT_URI=https://app.vpac.ca/api/auth/microsoft/callback"
 echo ""
 
 # OpenPhone
@@ -54,7 +54,7 @@ echo "OPENPHONE_API_BASE=https://api.openphone.com/v1"
 echo ""
 
 # Application URL
-echo "NEXT_PUBLIC_APP_URL=https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app"
+echo "NEXT_PUBLIC_APP_URL=https://app.vpac.ca"
 echo ""
 
 # Firebase Service Account (needs to be set manually with full JSON)

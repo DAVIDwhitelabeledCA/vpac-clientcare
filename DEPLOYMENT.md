@@ -9,7 +9,7 @@ This project uses **Firebase App Hosting** (not traditional Firebase Hosting) be
 Your backend is already configured:
 - **Backend Name**: `vpac-clientcare`
 - **Repository**: `DAVIDwhitelabeledCA-vpac-clientcare`
-- **URL**: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app
+- **URL**: https://app.vpac.ca (primary) / https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app (fallback)
 - **Region**: us-central1
 
 ### Deployment Methods
@@ -68,13 +68,13 @@ Firebase App Hosting automatically deploys when you push to your GitHub reposito
    - `FIREBASE_PROJECT_ID`
    - `FIREBASE_SERVICE_ACCOUNT` (full JSON string)
    - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_CLIENT_SECRET` (Secret Manager: `google-client-secret`)
    - `MICROSOFT_CLIENT_ID`
-   - `MICROSOFT_CLIENT_SECRET` (or certificate paths)
+   - `MICROSOFT_CLIENT_SECRET` (Secret Manager: `microsoft-client-secret`)
    - `MICROSOFT_TENANT_ID`
    - `OPENPHONE_API_KEY`
    - `OPENPHONE_PHONE_NUMBER_ID`
-   - `NEXT_PUBLIC_APP_URL` (your production URL)
+   - `NEXT_PUBLIC_APP_URL` (your production URL, `https://app.vpac.ca`)
 
 ### What's Already Deployed
 
@@ -88,7 +88,7 @@ Firebase App Hosting automatically deploys when you push to your GitHub reposito
 1. **Set Environment Variables** in Firebase Console (critical!)
 2. **Push to GitHub** to trigger automatic deployment
 3. **Monitor deployment** in Firebase Console
-4. **Test your live URL**: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app
+4. **Test your live URL**: https://app.vpac.ca (fallback: https://vpac-clientcare--studio-2120461843-5ad32.us-central1.hosted.app)
 
 ### Troubleshooting
 
