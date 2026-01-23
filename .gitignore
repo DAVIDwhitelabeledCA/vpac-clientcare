@@ -17,3 +17,5 @@ microsoft-*.pem
 microsoft-*.key
 microsoft-*.cer
 microsoft-*.pfx
+firebase-service-account-key.json
+.env.local.bak

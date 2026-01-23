@@ -58,6 +58,8 @@ import { useUser } from '@/firebase';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { CreateAppointmentDialog } from '@/components/create-appointment-dialog';
+import { SendSMSDialog } from '@/components/send-sms-dialog';
+import { JoinCallDialog } from '@/components/join-call-dialog';
 
 interface PendingUrgentRequest {
   id: string;
@@ -265,18 +267,30 @@ export default function Dashboard() {
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   });
 
-  const handleTextClient = (clientName: string) => {
-    toast({
-      title: 'SMS Feature (Quo Integration)',
-      description: `This would open a modal to send an SMS to ${clientName}.`,
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
+  const [joinCallDialogOpen, setJoinCallDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<{
+    clientId?: string;
+    name: string;
+    phone?: string;
+  } | null>(null);
+
+  const handleTextClient = (appt: typeof upcomingClientsData[0]) => {
+    setSelectedClient({
+      clientId: appt.clientId,
+      name: appt.name,
+      phone: appt.phone,
     });
+    setSmsDialogOpen(true);
   };
 
-  const handleJoinCall = (clientName: string) => {
-    toast({
-      title: 'Initiating Meeting',
-      description: `This would open the virtual meeting link for ${clientName}.`,
+  const handleJoinCall = (appt: typeof upcomingClientsData[0]) => {
+    setSelectedClient({
+      clientId: appt.clientId,
+      name: appt.name,
+      phone: appt.phone,
     });
+    setJoinCallDialogOpen(true);
   };
 
   return (
@@ -483,13 +497,13 @@ export default function Dashboard() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                  onClick={() => handleJoinCall(appt.name)}
+                                  onClick={() => handleJoinCall(appt)}
                                 >
                                   <Video className="mr-2 h-4 w-4" />
                                   <span>Join Call</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleTextClient(appt.name)}
+                                  onClick={() => handleTextClient(appt)}
                                 >
                                   <MessageSquare className="mr-2 h-4 w-4" />
                                   <span>SMS Client</span>
@@ -620,6 +634,24 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {selectedClient && (
+        <>
+          <SendSMSDialog
+            open={smsDialogOpen}
+            onOpenChange={setSmsDialogOpen}
+            clientId={selectedClient.clientId}
+            clientName={selectedClient.name}
+            clientPhone={selectedClient.phone}
+          />
+          <JoinCallDialog
+            open={joinCallDialogOpen}
+            onOpenChange={setJoinCallDialogOpen}
+            clientId={selectedClient.clientId}
+            clientName={selectedClient.name}
+          />
+        </>
+      )}
     </div>
   );
 }

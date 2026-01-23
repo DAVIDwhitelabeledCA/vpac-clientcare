@@ -26,6 +26,8 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { allClientsData, upcomingClientsData } from '@/lib/mock-data';
+import { SendSMSDialog } from '@/components/send-sms-dialog';
+import { JoinCallDialog } from '@/components/join-call-dialog';
 
 type Client = (typeof allClientsData)[0];
 
@@ -33,6 +35,9 @@ export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Client[]>([]);
   const { toast } = useToast();
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
+  const [joinCallDialogOpen, setJoinCallDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const handleSearch = () => {
     if (!searchQuery) {
@@ -55,17 +60,13 @@ export default function ClientsPage() {
   };
 
   const handleTextClient = (client: Client) => {
-    toast({
-      title: 'SMS Feature (Quo Integration)',
-      description: `This would open a modal to send an SMS to ${client.name}.`,
-    });
+    setSelectedClient(client);
+    setSmsDialogOpen(true);
   };
 
   const handleJoinCall = (client: Client) => {
-    toast({
-      title: 'Initiating Meeting',
-      description: `This would open the virtual meeting link for ${client.name}.`,
-    });
+    setSelectedClient(client);
+    setJoinCallDialogOpen(true);
   };
 
   return (
@@ -227,6 +228,24 @@ export default function ClientsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {selectedClient && (
+        <>
+          <SendSMSDialog
+            open={smsDialogOpen}
+            onOpenChange={setSmsDialogOpen}
+            clientId={selectedClient.clientId}
+            clientName={selectedClient.name}
+            clientPhone={selectedClient.phone}
+          />
+          <JoinCallDialog
+            open={joinCallDialogOpen}
+            onOpenChange={setJoinCallDialogOpen}
+            clientId={selectedClient.clientId}
+            clientName={selectedClient.name}
+          />
+        </>
+      )}
     </div>
   );
 }
